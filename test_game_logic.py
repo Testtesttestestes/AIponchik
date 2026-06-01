@@ -319,3 +319,15 @@ def test_neural_policy_can_train_save_and_load_tiny_model(tmp_path):
     assert out_path.exists()
     assert loaded.predict(np.array([[1.0, 1.0]], dtype=np.float32)).shape == (1,)
     assert metrics["epochsRun"] >= 1
+
+
+def test_policy_evaluation_reports_simulated_win_rate():
+    from neural_policy import NeuralMovePolicy, evaluate_policy_games
+
+    model = NeuralMovePolicy.load("models/policy_network.json")
+
+    report = evaluate_policy_games(model, games=1, seed=3)
+
+    assert report["games"] == 1
+    assert "successRate" in report
+    assert report["wins"] + report["losses"] == 1

@@ -8,7 +8,7 @@ explicitly; here we only build, train, save, and evaluate the neural policy.
 import json
 import math
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 import numpy as np
 
@@ -397,3 +397,94 @@ def train_policy(config: TrainingConfig, etalon_dir="etalon_images"):
         "valStates": val.state_count,
     })
     return model, metrics
+
+
+def select_policy_move(model: NeuralMovePolicy, encoder: MoveFeatureEncoder, state: Dict, candidates: Sequence[MoveCandidate], blend_heuristic: float = 0.0):
+    """Pick a move by neural score, optionally blended with normalized heuristic score."""
+    if not candidates:
+        return None
+    features = np.vstack([encoder.encode(state, move) for move in candidates]).astype(np.float32)
+    neural_scores = model.predict(features)
+    if blend_heuristic > 0.0:
+        heuristic_scores = np.asarray([move.score for move in candidates], dtype=np.float32)
+        span = float(heuristic_scores.max() - heuristic_scores.min())
+        if span > 1e-6:
+            heuristic_scores = (heuristic_scores - heuristic_scores.min()) / span
+        else:
+            heuristic_scores = np.zeros_like(heuristic_scores)
+        neural_span = float(neural_scores.max() - neural_scores.min())
+        if neural_span > 1e-6:
+            neural_scores = (neural_scores - neural_scores.min()) / neural_span
+        combined = (1.0 - blend_heuristic) * neural_scores + blend_heuristic * heuristic_scores
+    else:
+        combined = neural_scores
+    return candidates[int(np.argmax(combined))]
+
+
+def evaluate_policy_games(
+    model: NeuralMovePolicy,
+    games: int = 50,
+    seed: int = 20260602,
+    etalon_dir: str = "etalon_images",
+    candidates_per_state: int = 16,
+    blend_heuristic: float = 0.0,
+):
+    """Play simulated games with the trained policy and return win-rate metrics."""
+    simulator = RandomGameSimulator(
+        etalon_dir=etalon_dir,
+        config=SimulationConfig(seed=seed),
+        pathfinder=MovePathfinder(max_paths_per_item=80),
+    )
+    encoder = MoveFeatureEncoder()
+    results = []
+    for game_index in range(1, games + 1):
+        template = simulator.etalon_states[int(simulator.rng.integers(0, len(simulator.etalon_states)))]
+        difficulty = list(simulator.DIFFICULTIES)[(game_index - 1) % len(simulator.DIFFICULTIES)]
+        modifiers = simulator.DIFFICULTIES[difficulty]
+        level = str(template.get("gameState", {}).get("level", "0"))
+        moves_limit = simulator._moves_limit(template, modifiers)
+        targets_remaining = simulator._scaled_targets(template, modifiers)
+        board, ice_hp = simulator._random_board_from_template(template, modifiers)
+        turns = 0
+        for turn in range(1, moves_limit + 1):
+            if simulator._targets_done(targets_remaining):
+                break
+            state = simulator._state_for_solver(board, ice_hp, targets_remaining, moves_limit - turn + 1, level)
+            paths = simulator.pathfinder.find_paths(state["board"])
+            candidates = simulator.pathfinder.score_paths(
+                state["board"],
+                state["gameState"]["targets"],
+                paths,
+                moves_left=moves_limit - turn + 1,
+            )[:candidates_per_state]
+            if not candidates:
+                board, ice_hp = simulator._force_reseed_playable_area(board, ice_hp)
+                continue
+            move = select_policy_move(model, encoder, state, candidates, blend_heuristic=blend_heuristic)
+            simulator._apply_move(board, ice_hp, move.path, targets_remaining)
+            simulator._refill_board(board, ice_hp)
+            turns += 1
+        results.append({
+            "gameIndex": game_index,
+            "difficulty": difficulty,
+            "success": simulator._targets_done(targets_remaining),
+            "movesUsed": turns,
+            "movesLimit": moves_limit,
+            "targetsRemaining": dict(targets_remaining),
+        })
+    wins = sum(1 for result in results if result["success"])
+    by_difficulty = {}
+    for result in results:
+        bucket = by_difficulty.setdefault(result["difficulty"], {"games": 0, "wins": 0})
+        bucket["games"] += 1
+        bucket["wins"] += int(result["success"])
+    for bucket in by_difficulty.values():
+        bucket["successRate"] = round(bucket["wins"] / bucket["games"] * 100.0, 2) if bucket["games"] else 0.0
+    return {
+        "games": games,
+        "wins": wins,
+        "losses": games - wins,
+        "successRate": round(wins / games * 100.0, 2) if games else 0.0,
+        "byDifficulty": by_difficulty,
+        "details": results,
+    }

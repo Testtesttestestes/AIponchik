@@ -1,0 +1,53 @@
+# Обучение нейросети AIponchik
+
+Нейросеть сейчас **не используется в `game_parser.py` во время анализа экрана**. Это отдельный экспериментальный pipeline: он генерирует обучающие партии в симуляторе, учит модель ранжировать возможные ходы и сохраняет JSON-артефакт, который позже можно будет подключить отдельным PR.
+
+## Быстрый запуск
+
+```bat
+scripts\train_policy_network.bat
+```
+
+То же самое из терминала:
+
+```bash
+python train_policy_network.py --out models/policy_network.json --metrics-out run_outputs/policy_training_metrics.json
+```
+
+После завершения будут обновлены:
+
+- `models/policy_network.json` — веса сети, список признаков, нормализация, training config и метрики;
+- `run_outputs/policy_training_metrics.json` — те же метрики отдельным файлом для просмотра.
+
+## Как продолжить/усилить тренировку
+
+Для более долгого прогона увеличивай число обучающих и проверочных игр:
+
+```bash
+python train_policy_network.py ^
+  --train-games 200 ^
+  --val-games 60 ^
+  --eval-games 50 ^
+  --epochs 160 ^
+  --hidden-units 64 ^
+  --dropout 0.10 ^
+  --l2 0.0007 ^
+  --target-win-rate 60 ^
+  --out models/policy_network.json ^
+  --metrics-out run_outputs/policy_training_metrics.json
+```
+
+Рекомендации против переобучения:
+
+1. Держи `val-games` отдельным и достаточно большим: минимум 25-30% от `train-games`.
+2. Не выключай `dropout` и `l2`, если `trainTop1Agreement` заметно выше `valTop1Agreement`.
+3. Меняй `--seed`, чтобы проверить, что модель держится на других случайных полях.
+4. Смотри не только `valTop1Agreement`, но и `policyEvaluation.successRate`: именно это процент побед в симуляции.
+
+## Поля на тренировке случайные?
+
+Да. Тренировка берёт эталонные JSON из `etalon_images` только как шаблоны реальных уровней: цели, лимиты ходов, примерную частоту фишек и льда. Сами игровые поля для каждой обучающей партии создаются заново случайно детерминированным генератором NumPy по `--seed`; validation и post-training evaluation используют другой seed, чтобы не проверяться на тех же самых партиях.
+
+## Текущий статус 60% побед
+
+Скрипт теперь после обучения автоматически запускает `--eval-games` партий нейросетью и пишет `policyEvaluation.successRate`. Я запустил текущий pipeline на 50 held-out партиях с `--target-win-rate 60`: модель получила `9/50` побед (`18.0%`), поэтому в `models/policy_network.json` сейчас стоит `targetReached=false`. Это значит, что цель 60% ещё не достигнута, и модель пока нельзя подключать к анализатору как основную. Следующий шаг — улучшать teacher-labels/симулятор и только потом повторять длинную тренировку.

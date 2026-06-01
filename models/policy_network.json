@@ -2464,6 +2464,610 @@
     "trainSamples": 17794,
     "valSamples": 5422,
     "trainStates": 1114,
-    "valStates": 339
+    "valStates": 339,
+    "policyEvaluation": {
+      "games": 50,
+      "wins": 9,
+      "losses": 41,
+      "successRate": 18.0,
+      "byDifficulty": {
+        "easy": {
+          "games": 17,
+          "wins": 9,
+          "successRate": 52.94
+        },
+        "normal": {
+          "games": 17,
+          "wins": 0,
+          "successRate": 0.0
+        },
+        "hard": {
+          "games": 16,
+          "wins": 0,
+          "successRate": 0.0
+        }
+      },
+      "details": [
+        {
+          "gameIndex": 1,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 27,
+          "movesLimit": 27,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 0,
+            "ice": 2
+          }
+        },
+        {
+          "gameIndex": 2,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 24,
+          "movesLimit": 24,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 8,
+            "ice": 2
+          }
+        },
+        {
+          "gameIndex": 3,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "biscuit": 0,
+            "chocolate": 2,
+            "ice": 4
+          }
+        },
+        {
+          "gameIndex": 4,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 16,
+          "movesLimit": 28,
+          "targetsRemaining": {
+            "donut": 0,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 5,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 18,
+          "movesLimit": 18,
+          "targetsRemaining": {
+            "biscuit": 6,
+            "chocolate": 0,
+            "ice": 2
+          }
+        },
+        {
+          "gameIndex": 6,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 9,
+          "movesLimit": 9,
+          "targetsRemaining": {
+            "muffin": 25,
+            "biscuit": 13
+          }
+        },
+        {
+          "gameIndex": 7,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 23,
+          "movesLimit": 23,
+          "targetsRemaining": {
+            "donut": 2,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 8,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 8,
+          "movesLimit": 8,
+          "targetsRemaining": {
+            "muffin": 14,
+            "biscuit": 10,
+            "ice": 5
+          }
+        },
+        {
+          "gameIndex": 9,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "muffin": 17,
+            "biscuit": 3
+          }
+        },
+        {
+          "gameIndex": 10,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 18,
+          "movesLimit": 18,
+          "targetsRemaining": {
+            "muffin": 4,
+            "biscuit": 8,
+            "ice": 3
+          }
+        },
+        {
+          "gameIndex": 11,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 18,
+          "movesLimit": 18,
+          "targetsRemaining": {
+            "biscuit": 15,
+            "chocolate": 0,
+            "ice": 4
+          }
+        },
+        {
+          "gameIndex": 12,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 16,
+          "movesLimit": 16,
+          "targetsRemaining": {
+            "muffin": 12,
+            "biscuit": 17
+          }
+        },
+        {
+          "gameIndex": 13,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 27,
+          "movesLimit": 27,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 0,
+            "ice": 0
+          }
+        },
+        {
+          "gameIndex": 14,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "muffin": 12,
+            "biscuit": 4
+          }
+        },
+        {
+          "gameIndex": 15,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "muffin": 5,
+            "biscuit": 7
+          }
+        },
+        {
+          "gameIndex": 16,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 27,
+          "movesLimit": 27,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 1,
+            "ice": 1
+          }
+        },
+        {
+          "gameIndex": 17,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 24,
+          "movesLimit": 24,
+          "targetsRemaining": {
+            "donut": 8,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 18,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "biscuit": 10,
+            "chocolate": 3,
+            "ice": 4
+          }
+        },
+        {
+          "gameIndex": 19,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 26,
+          "movesLimit": 26,
+          "targetsRemaining": {
+            "biscuit": 0,
+            "chocolate": 0,
+            "ice": 1
+          }
+        },
+        {
+          "gameIndex": 20,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 18,
+          "movesLimit": 18,
+          "targetsRemaining": {
+            "biscuit": 0,
+            "chocolate": 0,
+            "ice": 6
+          }
+        },
+        {
+          "gameIndex": 21,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 21,
+          "movesLimit": 21,
+          "targetsRemaining": {
+            "muffin": 16,
+            "biscuit": 12
+          }
+        },
+        {
+          "gameIndex": 22,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 20,
+          "movesLimit": 27,
+          "targetsRemaining": {
+            "donut": 0,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 23,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 24,
+          "movesLimit": 24,
+          "targetsRemaining": {
+            "muffin": 8,
+            "biscuit": 0,
+            "ice": 3
+          }
+        },
+        {
+          "gameIndex": 24,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 16,
+          "movesLimit": 16,
+          "targetsRemaining": {
+            "muffin": 10,
+            "biscuit": 9
+          }
+        },
+        {
+          "gameIndex": 25,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 25,
+          "movesLimit": 26,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 26,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 14,
+          "movesLimit": 14,
+          "targetsRemaining": {
+            "muffin": 14,
+            "biscuit": 10,
+            "ice": 5
+          }
+        },
+        {
+          "gameIndex": 27,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 11,
+          "movesLimit": 11,
+          "targetsRemaining": {
+            "muffin": 18,
+            "biscuit": 25,
+            "ice": 5
+          }
+        },
+        {
+          "gameIndex": 28,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 26,
+          "movesLimit": 26,
+          "targetsRemaining": {
+            "biscuit": 0,
+            "chocolate": 0,
+            "ice": 3
+          }
+        },
+        {
+          "gameIndex": 29,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "muffin": 4,
+            "biscuit": 5
+          }
+        },
+        {
+          "gameIndex": 30,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 11,
+          "movesLimit": 11,
+          "targetsRemaining": {
+            "muffin": 13,
+            "biscuit": 20,
+            "ice": 5
+          }
+        },
+        {
+          "gameIndex": 31,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 21,
+          "movesLimit": 28,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 32,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 23,
+          "movesLimit": 23,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 9,
+            "ice": 4
+          }
+        },
+        {
+          "gameIndex": 33,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 15,
+          "movesLimit": 15,
+          "targetsRemaining": {
+            "biscuit": 11,
+            "chocolate": 6,
+            "ice": 8
+          }
+        },
+        {
+          "gameIndex": 34,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 20,
+          "movesLimit": 27,
+          "targetsRemaining": {
+            "donut": 0,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 35,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 14,
+          "movesLimit": 14,
+          "targetsRemaining": {
+            "muffin": 13,
+            "biscuit": 18,
+            "ice": 5
+          }
+        },
+        {
+          "gameIndex": 36,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "biscuit": 8,
+            "chocolate": 3,
+            "ice": 7
+          }
+        },
+        {
+          "gameIndex": 37,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 26,
+          "movesLimit": 26,
+          "targetsRemaining": {
+            "biscuit": 0,
+            "chocolate": 0,
+            "ice": 0
+          }
+        },
+        {
+          "gameIndex": 38,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "donut": 0,
+            "biscuit": 10
+          }
+        },
+        {
+          "gameIndex": 39,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 21,
+          "movesLimit": 21,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 9
+          }
+        },
+        {
+          "gameIndex": 40,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 19,
+          "movesLimit": 27,
+          "targetsRemaining": {
+            "donut": 0,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 41,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 19,
+          "movesLimit": 19,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 15
+          }
+        },
+        {
+          "gameIndex": 42,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 16,
+          "movesLimit": 16,
+          "targetsRemaining": {
+            "donut": 6,
+            "biscuit": 15
+          }
+        },
+        {
+          "gameIndex": 43,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 18,
+          "movesLimit": 18,
+          "targetsRemaining": {
+            "muffin": 5,
+            "biscuit": 0,
+            "ice": 4
+          }
+        },
+        {
+          "gameIndex": 44,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 24,
+          "movesLimit": 24,
+          "targetsRemaining": {
+            "muffin": 3,
+            "biscuit": 1,
+            "ice": 1
+          }
+        },
+        {
+          "gameIndex": 45,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 15,
+          "movesLimit": 15,
+          "targetsRemaining": {
+            "biscuit": 13,
+            "chocolate": 6,
+            "ice": 5
+          }
+        },
+        {
+          "gameIndex": 46,
+          "difficulty": "easy",
+          "success": true,
+          "movesUsed": 17,
+          "movesLimit": 28,
+          "targetsRemaining": {
+            "muffin": 0,
+            "biscuit": 0
+          }
+        },
+        {
+          "gameIndex": 47,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 22,
+          "movesLimit": 22,
+          "targetsRemaining": {
+            "muffin": 2,
+            "biscuit": 7
+          }
+        },
+        {
+          "gameIndex": 48,
+          "difficulty": "hard",
+          "success": false,
+          "movesUsed": 20,
+          "movesLimit": 20,
+          "targetsRemaining": {
+            "donut": 13,
+            "biscuit": 5
+          }
+        },
+        {
+          "gameIndex": 49,
+          "difficulty": "easy",
+          "success": false,
+          "movesUsed": 22,
+          "movesLimit": 22,
+          "targetsRemaining": {
+            "biscuit": 0,
+            "chocolate": 0,
+            "ice": 2
+          }
+        },
+        {
+          "gameIndex": 50,
+          "difficulty": "normal",
+          "success": false,
+          "movesUsed": 14,
+          "movesLimit": 14,
+          "targetsRemaining": {
+            "muffin": 11,
+            "biscuit": 16,
+            "ice": 5
+          }
+        }
+      ]
+    },
+    "targetWinRate": 60.0,
+    "targetReached": false
   }
 }
