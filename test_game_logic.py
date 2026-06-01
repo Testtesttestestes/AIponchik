@@ -119,3 +119,47 @@ def test_best_move_uses_future_board_state_in_reasons():
 
     assert any(reason.startswith("utility") for reason in move.reasons)
     assert any(reason.startswith("future clusters") for reason in move.reasons)
+
+
+def test_draw_move_overlay_marks_suggested_path(tmp_path):
+    import cv2
+    import numpy as np
+    from game_parser import GameBoardParser
+
+    parser = GameBoardParser()
+    parser.center_xs = [20, 60, 100]
+    parser.center_ys = [20, 60, 100]
+    parser.cell_w = 40
+    parser.cell_h = 40
+    image = np.zeros((140, 140, 3), dtype=np.uint8)
+    move = {
+        "item": "muffin",
+        "length": 3,
+        "score": 42.0,
+        "path": [{"row": 0, "col": 0}, {"row": 1, "col": 1}, {"row": 2, "col": 2}],
+    }
+    out_path = tmp_path / "overlay.jpg"
+
+    overlay = parser.draw_move_overlay(image, move, str(out_path))
+
+    assert out_path.exists()
+    assert overlay.sum() > image.sum()
+    assert cv2.imread(str(out_path)) is not None
+
+
+def test_scrcpy_stream_source_numeric_string_becomes_camera_index():
+    from game_parser import ScrcpyStreamReader
+
+    assert ScrcpyStreamReader("2").source == 2
+    assert ScrcpyStreamReader("/dev/video2").source == "/dev/video2"
+
+
+def test_write_json_result_creates_parent_directory(tmp_path):
+    import json
+    from game_parser import write_json_result
+
+    out_path = tmp_path / "nested" / "state.json"
+
+    write_json_result({"bestMove": None}, str(out_path))
+
+    assert json.loads(out_path.read_text()) == {"bestMove": None}
