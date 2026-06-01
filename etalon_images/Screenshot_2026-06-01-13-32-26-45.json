@@ -1,0 +1,75 @@
+{
+  "gameState": {
+    "movesLeft": "24",
+    "level": "17",
+    "targets": {
+      "muffin": "0 / 27",
+      "biscuit": "0 / 26"
+    }
+  },
+  "board": [
+    [
+      "muffin",
+      "red",
+      "red",
+      "chocolate",
+      "red",
+      "biscuit",
+      "red"
+    ],
+    [
+      "biscuit",
+      "red",
+      "chocolate",
+      "muffin",
+      "muffin",
+      "biscuit",
+      "muffin"
+    ],
+    [
+      "muffin",
+      "biscuit",
+      "biscuit",
+      "chocolate",
+      "muffin",
+      "red",
+      "red"
+    ],
+    [
+      "donut",
+      "muffin",
+      "biscuit",
+      "donut",
+      "biscuit",
+      "chocolate",
+      "chocolate"
+    ],
+    [
+      "muffin",
+      "red",
+      "muffin",
+      "biscuit",
+      "biscuit",
+      "donut",
+      "muffin"
+    ],
+    [
+      "donut",
+      "red",
+      "red",
+      "biscuit",
+      "muffin",
+      "donut",
+      "biscuit"
+    ],
+    [
+      "donut",
+      "muffin",
+      "red",
+      "muffin",
+      "red",
+      "chocolate",
+      "biscuit"
+    ]
+  ]
+}

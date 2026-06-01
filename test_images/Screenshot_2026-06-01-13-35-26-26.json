@@ -1,0 +1,71 @@
+{
+    "gameState": {
+        "movesLeft": "0",
+        "level": "0"
+    },
+    "board": [
+        [
+            "muffin_ice",
+            "EMPTY",
+            "muffin_ice",
+            "donut_ice",
+            "donut_ice",
+            "chocolate_ice",
+            "chocolate_ice"
+        ],
+        [
+            "chocolate_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice"
+        ],
+        [
+            "EMPTY",
+            "EMPTY",
+            "biscuit_ice",
+            "muffin_ice",
+            "muffin_ice",
+            "muffin_ice",
+            "muffin_ice"
+        ],
+        [
+            "unknown",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "unknown",
+            "unknown",
+            "donut_ice"
+        ],
+        [
+            "chocolate_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "chocolate_ice",
+            "muffin_ice",
+            "donut_ice"
+        ],
+        [
+            "chocolate_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "unknown",
+            "donut_ice"
+        ],
+        [
+            "muffin_ice",
+            "donut_ice",
+            "donut_ice",
+            "donut_ice",
+            "chocolate_ice",
+            "muffin_ice",
+            "donut_ice"
+        ]
+    ]
+}
