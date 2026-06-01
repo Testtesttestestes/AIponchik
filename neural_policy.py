@@ -7,6 +7,8 @@ import json
 import math
 from dataclasses import dataclass
 from typing import Dict, List, Sequence
+import concurrent.futures
+import os
 
 import numpy as np
 import torch
@@ -309,41 +311,107 @@ class PolicyTrainingDatasetBuilder:
         self.simulator = RandomGameSimulator(etalon_dir=etalon_dir, config=config, pathfinder=MovePathfinder(max_paths_per_item=20, rollout_samples=0))
         self.encoder = MoveFeatureEncoder()
         self.candidates_per_state = candidates_per_state
-
-    def build(self, games: int, seed_offset: int = 0) -> PolicyDataset:
-        self.simulator.rng = np.random.default_rng(self.simulator.config.seed + seed_offset)
-        features = []
-        labels = []
-        state_ids = []
-        best_rows = []
-        state_id = 0
         
-        print(f"Building dataset for {games} games...")
-        for game_index in range(1, games + 1):
-            for state, candidates in self._iter_teacher_states(game_index):
-                if len(candidates) < 2:
-                    continue
+    def _build_single_game(self, game_index: int, seed_offset: int):
+        # Локальная инициализация симулятора для каждого процесса (избегает конфликтов состояний)
+        from game_parser import SimulationConfig, RandomGameSimulator, MovePathfinder
+        config = SimulationConfig(seed=self.simulator.config.seed + seed_offset + game_index, ice_hits=self.simulator.config.ice_hits)
+        local_simulator = RandomGameSimulator(
+            etalon_dir=self.simulator.etalon_dir, 
+            config=config, 
+            pathfinder=MovePathfinder(max_paths_per_item=20, rollout_samples=0)
+        )
+        local_encoder = MoveFeatureEncoder()
+        
+        features, labels, state_ids, best_rows = [], [], [], []
+        
+        # Копируем логику из _iter_teacher_states, но используем local_simulator
+        template = local_simulator.etalon_states[int(local_simulator.rng.integers(0, len(local_simulator.etalon_states)))]
+        difficulty = list(local_simulator.DIFFICULTIES)[(game_index - 1) % len(local_simulator.DIFFICULTIES)]
+        modifiers = local_simulator.DIFFICULTIES[difficulty]
+        level = str(template.get("gameState", {}).get("level", "0"))
+        moves_limit = local_simulator._moves_limit(template, modifiers)
+        targets_remaining = local_simulator._scaled_targets(template, modifiers)
+        board, ice_hp = local_simulator._random_board_from_template(template, modifiers)
+        
+        state_id_counter = 0
+        for turn in range(1, moves_limit + 1):
+            if local_simulator._targets_done(targets_remaining):
+                break
+            state = local_simulator._state_for_solver(board, ice_hp, targets_remaining, moves_limit - turn + 1, level)
+            paths = local_simulator.pathfinder.find_paths(state["board"])
+            candidates = local_simulator.pathfinder.score_paths(
+                state["board"], state["gameState"]["targets"], paths, moves_left=moves_limit - turn + 1
+            )
+            
+            if not candidates:
+                board, ice_hp = local_simulator._force_reseed_playable_area(board, ice_hp)
+                continue
+                
+            if len(candidates) >= 2:
                 selected = candidates[: self.candidates_per_state]
                 scores = np.asarray([move.score for move in selected], dtype=np.float32)
                 score_span = float(scores.max() - scores.min())
                 normalized = np.ones_like(scores) if score_span < 1e-6 else (scores - scores.min()) / score_span
+                
                 start_row = len(features)
                 for move, label in zip(selected, normalized):
-                    features.append(self.encoder.encode(state, move))
+                    features.append(local_encoder.encode(state, move))
                     labels.append(float(label))
-                    state_ids.append(state_id)
+                    # Временно используем state_id_counter, поправим смещение при сборке
+                    state_ids.append(state_id_counter) 
                 best_rows.append(start_row + int(np.argmax(normalized)))
-                state_id += 1
+                state_id_counter += 1
                 
-        if not features:
+            best_move = candidates[0]
+            local_simulator._apply_move(board, ice_hp, best_move.path, targets_remaining)
+            local_simulator._refill_board(board, ice_hp)
+            
+        return features, labels, state_ids, best_rows, state_id_counter
+
+    def build(self, games: int, seed_offset: int = 0) -> PolicyDataset:
+        cores = max(1, os.cpu_count() - 1) # Оставляем 1 ядро свободным
+        print(f"Building dataset for {games} games using {cores} CPU cores...")
+        
+        all_features = []
+        all_labels = []
+        all_state_ids = []
+        all_best_rows = []
+        global_state_id = 0
+        
+        # Запускаем пул процессов
+        with concurrent.futures.ProcessPoolExecutor(max_workers=cores) as executor:
+            futures = [executor.submit(self._build_single_game, i, seed_offset) for i in range(1, games + 1)]
+            
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    f_feats, f_labels, f_state_ids, f_best_rows, states_processed = future.result()
+                    if not f_feats:
+                        continue
+                        
+                    # Корректируем ID состояний и индексы строк для объединения
+                    current_rows_offset = len(all_features)
+                    shifted_state_ids = [sid + global_state_id for sid in f_state_ids]
+                    shifted_best_rows = [row + current_rows_offset for row in f_best_rows]
+                    
+                    all_features.extend(f_feats)
+                    all_labels.extend(f_labels)
+                    all_state_ids.extend(shifted_state_ids)
+                    all_best_rows.extend(shifted_best_rows)
+                    
+                    global_state_id += states_processed
+                except Exception as e:
+                    print(f"Error processing game: {e}")
+    
+        if not all_features:
             raise RuntimeError("Could not build a policy dataset: no candidate moves found")
             
-        print(f"Dataset compiled: {len(features)} move candidates across {state_id} board states.")
+        print(f"Dataset compiled: {len(all_features)} move candidates across {global_state_id} board states.")
         return PolicyDataset(
-            x=np.vstack(features).astype(np.float32),
-            y=np.asarray(labels, dtype=np.float32),
-            state_ids=np.asarray(state_ids, dtype=np.int32),
-            best_candidate_rows=np.asarray(best_rows, dtype=np.int32),
+            x=np.vstack(all_features).astype(np.float32),
+            y=np.asarray(all_labels, dtype=np.float32),
+            state_ids=np.asarray(all_state_ids, dtype=np.int32),
+            best_candidate_rows=np.asarray(all_best_rows, dtype=np.int32),
         )
 
     def _iter_teacher_states(self, game_index: int):
