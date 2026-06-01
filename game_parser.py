@@ -24,7 +24,7 @@ class HeuristicWeights:
     future: float = 0.35
     cluster: float = 3.0
     orphan: float = 8.0
-    ice_adjacency: float = 6.0
+    ice_target: float = 6.0
 
 
 @dataclass(frozen=True)
@@ -34,7 +34,7 @@ class BoardEvaluation:
     score: float
     cluster_score: float
     orphan_penalty: float
-    ice_adjacency_score: float
+    ice_target_score: float
     cluster_count: int
     orphan_count: int
     reasons: Tuple[str, ...]
@@ -66,10 +66,9 @@ class MoveCandidate:
 class FutureBoardEvaluator:
     """Score the guaranteed board quality after a line-drawing move.
 
-    Empty cells created at the top after gravity are treated as unknown future
-    drops and are ignored by connectivity calculations.  This keeps the
-    heuristic focused on what the move certainly leaves behind instead of
-    pretending to know random incoming pieces.
+    EMPTY cells are pass-through gaps, not falling tiles.  Known pieces slide
+    through them during gravity, while cells emptied at the top are ignored by
+    connectivity calculations so random incoming drops are not guessed.
     """
 
     BLOCKED = {"", "EMPTY", "ERROR", "unknown", None}
@@ -101,7 +100,7 @@ class FutureBoardEvaluator:
                     yield nr, nc
 
     def simulate_after_move(self, board, path):
-        """Remove ``path`` and apply vertical gravity, leaving unknown drops empty."""
+        """Remove ``path`` and let known pieces slide through EMPTY gaps."""
         if not board:
             return []
 
@@ -166,29 +165,30 @@ class FutureBoardEvaluator:
         playable_count = sum(cluster_sizes)
         cluster_score = (sum(size * size for size in cluster_sizes) / playable_count) if playable_count else 0.0
         orphan_penalty = float(orphan_count)
-        ice_adjacency_score = self._score_ice_adjacency(board, targets or {})
+        ice_target_score = self._score_ice_targets(board, targets or {})
 
         score = (
             self.weights.cluster * cluster_score
             - self.weights.orphan * orphan_penalty
-            + self.weights.ice_adjacency * ice_adjacency_score
+            + self.weights.ice_target * ice_target_score
         )
         reasons = (
             f"future clusters: {len(cluster_sizes)} group(s), weighted avg {cluster_score:.2f}",
             f"future orphans: -{orphan_penalty:.0f}",
-            f"future ice adjacency: +{ice_adjacency_score:.1f}",
+            f"future ice targets: +{ice_target_score:.1f}",
         )
         return BoardEvaluation(
             score=score,
             cluster_score=cluster_score,
             orphan_penalty=orphan_penalty,
-            ice_adjacency_score=ice_adjacency_score,
+            ice_target_score=ice_target_score,
             cluster_count=len(cluster_sizes),
             orphan_count=orphan_count,
             reasons=reasons,
         )
 
-    def _score_ice_adjacency(self, board, targets):
+    def _score_ice_targets(self, board, targets):
+        """Reward iced cells that remain directly collectable in a future chain."""
         normalized_targets = self._normalize_targets(targets)
         ice_target = normalized_targets.get("ice")
         if not ice_target or ice_target["remaining"] <= 0:
@@ -197,23 +197,42 @@ class FutureBoardEvaluator:
         rows = len(board)
         cols = len(board[0]) if rows else 0
         score = 0.0
-        counted = set()
+        remaining_ice = ice_target["remaining"]
+        visited = set()
         for row in range(rows):
             for col in range(cols):
-                if not self.has_ice(board[row][col]):
+                if (row, col) in visited:
                     continue
-                for nr, nc in self._neighbors(row, col, rows, cols):
-                    if (nr, nc) in counted:
-                        continue
-                    item = self.base_item(board[nr][nc])
-                    if item is None:
-                        continue
-                    target = normalized_targets.get(item)
-                    if target and target["remaining"] > 0:
-                        score += 1.5
-                    else:
-                        score += 0.5
-                    counted.add((nr, nc))
+                item = self.base_item(board[row][col])
+                if item is None:
+                    continue
+
+                stack = [(row, col)]
+                visited.add((row, col))
+                component = []
+                iced_count = 0
+                while stack:
+                    cr, cc = stack.pop()
+                    component.append((cr, cc))
+                    if self.has_ice(board[cr][cc]):
+                        iced_count += 1
+                    for nr, nc in self._neighbors(cr, cc, rows, cols):
+                        if (nr, nc) in visited:
+                            continue
+                        if self.base_item(board[nr][nc]) != item:
+                            continue
+                        visited.add((nr, nc))
+                        stack.append((nr, nc))
+
+                if iced_count == 0 or remaining_ice <= 0:
+                    continue
+                component_size = len(component)
+                useful_ice = min(iced_count, remaining_ice)
+                remaining_ice -= useful_ice
+                if component_size >= 3:
+                    score += useful_ice * 2.0
+                elif component_size == 2:
+                    score += useful_ice * 0.75
         return score
 
     def _normalize_targets(self, targets):
