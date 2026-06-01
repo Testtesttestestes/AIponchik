@@ -220,6 +220,43 @@ def test_best_move_uses_future_board_state_in_reasons():
     assert any(reason.startswith("future clusters") for reason in move.reasons)
 
 
+def test_finish_target_bonus_is_tempered():
+    board = [["muffin", "muffin"]]
+    path = ((0, 0), (0, 1))
+
+    score, reasons = MovePathfinder().score_path(board, {"muffin": "0 / 2"}, "muffin", path)
+
+    assert score == 92.0
+    assert "finish target muffin: +50" in reasons
+
+
+def test_score_move_uses_greedy_shortcut_with_two_moves_left():
+    from game_parser import BoardEvaluation
+
+    class ExplodingFutureEvaluator:
+        def simulate_after_move(self, board, path):
+            raise AssertionError("future search should be skipped in endgame")
+
+        def evaluate(self, board, targets):
+            return BoardEvaluation(999.0, 0.0, 0.0, 0.0, 0, 0, ())
+
+    board = [["donut", "donut", "donut"]]
+    pathfinder = MovePathfinder()
+    pathfinder.future_evaluator = ExplodingFutureEvaluator()
+
+    score, reasons = pathfinder.score_move(board, {}, "donut", ((0, 0), (0, 1), (0, 2)), moves_left=2)
+
+    assert score == 3.0
+    assert any("greedy endgame" in reason for reason in reasons)
+
+
+def test_random_game_simulator_keeps_honest_normal_and_hard_difficulties():
+    from game_parser import RandomGameSimulator
+
+    assert RandomGameSimulator.DIFFICULTIES["normal"] == {"move_bonus": 0, "target_scale": 1.0, "ice_scale": 1.0}
+    assert RandomGameSimulator.DIFFICULTIES["hard"] == {"move_bonus": -3, "target_scale": 1.15, "ice_scale": 1.25}
+
+
 def test_draw_move_overlay_marks_suggested_path(tmp_path):
     import cv2
     import numpy as np

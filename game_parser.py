@@ -30,6 +30,13 @@ class HeuristicWeights:
     lookahead: float = 0.65
 
 
+DEFAULT_SEARCH_DEPTH = 2
+DEFAULT_ROLLOUT_SAMPLES = 12
+DEFAULT_MAX_PATHS_PER_ITEM = 15
+FINISH_TARGET_BONUS = 50.0
+ENDGAME_GREEDY_MOVES = 2
+
+
 @dataclass(frozen=True)
 class BoardEvaluation:
     """Detailed heuristic estimate of how playable a board is after a move."""
@@ -123,7 +130,7 @@ class FutureBoardEvaluator:
         orphan_neighbor_threshold=1,
         item_probabilities=None,
         item_types=None,
-        rollout_samples=6,
+        rollout_samples=DEFAULT_ROLLOUT_SAMPLES,
         random_seed=20260601,
     ):
         self.weights = weights or HeuristicWeights()
@@ -343,7 +350,14 @@ class MovePathfinder:
         "ice": "ice",
     }
 
-    def __init__(self, min_length=2, max_paths_per_item=20000, weights=None, search_depth=3, rollout_samples=6):
+    def __init__(
+        self,
+        min_length=2,
+        max_paths_per_item=DEFAULT_MAX_PATHS_PER_ITEM,
+        weights=None,
+        search_depth=DEFAULT_SEARCH_DEPTH,
+        rollout_samples=DEFAULT_ROLLOUT_SAMPLES,
+    ):
         self.min_length = min_length
         self.max_paths_per_item = max_paths_per_item
         self.weights = weights or HeuristicWeights()
@@ -454,7 +468,15 @@ class MovePathfinder:
 
     def score_move(self, board, targets, item, path, moves_left=None, include_stochastic=True):
         """Score a move as immediate reward plus probabilistic depth-limited lookahead."""
+        moves_left = self._parse_moves_left(moves_left)
         immediate_score, immediate_reasons = self.score_path(board, targets, item, path, moves_left=moves_left)
+        if moves_left is not None and moves_left <= ENDGAME_GREEDY_MOVES:
+            reasons = [
+                f"utility immediate {immediate_score:.2f} (greedy endgame: {moves_left} move(s) left)",
+                *immediate_reasons,
+            ]
+            return self.weights.immediate * immediate_score, reasons
+
         next_board = self.future_evaluator.simulate_after_move(board, path)
         future = self.future_evaluator.evaluate(next_board, targets)
         updated_targets = self._targets_after_path(board, targets, path)
@@ -642,8 +664,8 @@ class MovePathfinder:
             score += bonus
             reasons.append(f"target {item}: +{bonus:.0f} for {useful} useful tile(s)")
             if useful >= target["remaining"]:
-                score += 250.0
-                reasons.append(f"finish target {item}: +250")
+                score += FINISH_TARGET_BONUS
+                reasons.append(f"finish target {item}: +{FINISH_TARGET_BONUS:.0f}")
             pressure_bonus, pressure_reasons = self._move_budget_pressure(target["remaining"], useful, moves_left, item)
             score += pressure_bonus
             reasons.extend(pressure_reasons)
@@ -746,8 +768,8 @@ class RandomGameSimulator:
     ITEMS = ("biscuit", "donut", "chocolate", "red", "muffin")
     DIFFICULTIES = {
         "easy": {"move_bonus": 4, "target_scale": 0.75, "ice_scale": 0.7},
-        "normal": {"move_bonus": 3, "target_scale": 0.7, "ice_scale": 0.6},
-        "hard": {"move_bonus": 3, "target_scale": 0.75, "ice_scale": 0.65},
+        "normal": {"move_bonus": 0, "target_scale": 1.0, "ice_scale": 1.0},
+        "hard": {"move_bonus": -3, "target_scale": 1.15, "ice_scale": 1.25},
     }
 
     def __init__(self, etalon_dir="etalon_images", config=None, pathfinder=None):
