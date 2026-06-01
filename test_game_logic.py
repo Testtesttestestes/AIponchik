@@ -23,6 +23,48 @@ def test_completed_target_has_zero_item_score():
     assert "target biscuit completed: item score is zero" in reasons
 
 
+def test_move_budget_rewards_on_pace_target_collection():
+    board = [["muffin", "muffin", "muffin"], ["biscuit", "biscuit", "biscuit"]]
+    muffin_path = ((0, 0), (0, 1), (0, 2))
+    biscuit_path = ((1, 0), (1, 1), (1, 2))
+    pathfinder = MovePathfinder()
+
+    scored = pathfinder.score_paths(
+        board,
+        {"muffin": "0 / 9"},
+        [biscuit_path, muffin_path],
+        moves_left=2,
+    )
+
+    assert scored[0].path == muffin_path
+    assert any(reason.startswith("move budget muffin") for reason in scored[0].reasons)
+
+
+def test_analyze_state_parses_moves_left_for_solver_pressure():
+    game_state = {
+        "gameState": {"movesLeft": "2", "targets": {"muffin": "0 / 9"}},
+        "board": [["muffin", "muffin", "muffin"], ["biscuit", "biscuit", "biscuit"]],
+    }
+
+    result = __import__("game_parser").analyze_state(game_state, top=2)
+
+    assert result["analysis"]["movesLeftParsed"] == 2
+    assert result["bestMove"]["item"] == "muffin"
+
+
+def test_captured_frame_without_board_returns_none_instead_of_raising(tmp_path):
+    import numpy as np
+    from types import SimpleNamespace
+    from game_parser import GameBoardParser, analyze_captured_frame
+
+    args = SimpleNamespace(top=10, overlay=None, show_overlay_window=False, window_ms=0)
+    frame = np.zeros((240, 108, 3), dtype=np.uint8)
+
+    result = analyze_captured_frame(GameBoardParser(), frame, str(tmp_path / "state.json"), "test", args)
+
+    assert result is None
+
+
 def test_ice_target_scores_iced_base_tile():
     board = [["muffin_ice", "muffin", "muffin"]]
     path = ((0, 0), (0, 1), (0, 2))
