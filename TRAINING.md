@@ -14,6 +14,8 @@ scripts\train_policy_network.bat
 python train_policy_network.py --out models/policy_network.json --metrics-out run_outputs/policy_training_metrics.json
 ```
 
+По умолчанию скрипт теперь **пытается сыграть 210 training-игр и 70 validation-игр**, потому что проигрышные партии teacher отбрасываются целиком и не попадают в датасет.
+
 После завершения будут обновлены:
 
 - `models/policy_network.json` — веса сети, список признаков, нормализация, training config и метрики;
@@ -25,8 +27,8 @@ python train_policy_network.py --out models/policy_network.json --metrics-out ru
 
 ```bash
 python train_policy_network.py ^
-  --train-games 200 ^
-  --val-games 60 ^
+  --train-games 210 ^
+  --val-games 70 ^
   --eval-games 50 ^
   --epochs 160 ^
   --hidden-units 64 ^
@@ -41,7 +43,7 @@ python train_policy_network.py ^
 
 Рекомендации против переобучения:
 
-1. Из-за отбора только победителей увеличивай `--train-games` и `--val-games`: часть партий будет отброшена, а метрики `trainGamesKept` / `valGamesKept` покажут, сколько победных историй реально попало в обучение.
+1. Из-за отбора только победителей увеличивай `--train-games` и `--val-games`: часть партий будет отброшена, а метрики `trainGamesKept` / `valGamesKept` покажут, сколько победных историй реально попало в обучение, а `trainGamesDiscarded` / `valGamesDiscarded` — сколько проигрышных партий было отброшено до добавления в общий датасет.
 2. Не выключай `dropout` и `l2`, если `trainTop1Agreement` заметно выше `valTop1Agreement`.
 3. Меняй `--seed`, чтобы проверить, что модель держится на других случайных полях.
 4. Смотри не только `valTop1Agreement`, но и `policyEvaluation.successRate`: именно это процент побед в симуляции.
