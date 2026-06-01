@@ -518,23 +518,6 @@ def train_policy(config: TrainingConfig, etalon_dir="etalon_images", save_path=N
     return model, metrics
 
 
-def _direct_target_yield(pathfinder: MovePathfinder, state: Dict, move: MoveCandidate) -> int:
-    board = state.get("board", [])
-    targets = pathfinder._normalize_targets(state.get("gameState", {}).get("targets", {}))
-    direct = 0
-
-    target = targets.get(move.item)
-    if target and target["remaining"] > 0:
-        direct += min(move.length, target["remaining"])
-
-    ice_target = targets.get("ice")
-    if ice_target and ice_target["remaining"] > 0:
-        ice_hits = sum(1 for row, col in move.path if MovePathfinder.has_ice(board[row][col]))
-        direct += min(ice_hits, ice_target["remaining"])
-
-    return direct
-
-
 def select_policy_move(model: NeuralMovePolicy, encoder: MoveFeatureEncoder, state: Dict, candidates: Sequence[MoveCandidate], blend_heuristic: float = 0.0):
     if not candidates:
         return None
@@ -557,15 +540,7 @@ def select_policy_move(model: NeuralMovePolicy, encoder: MoveFeatureEncoder, sta
     else:
         combined = neural_scores
 
-    ranked_indices = sorted(range(len(candidates)), key=lambda idx: (combined[idx], candidates[idx].length), reverse=True)
-    best = candidates[ranked_indices[0]]
-    if _direct_target_yield(encoder.pathfinder, state, best) == 0 and best.length < 4:
-        for idx in ranked_indices[1:]:
-            candidate = candidates[idx]
-            if _direct_target_yield(encoder.pathfinder, state, candidate) > 0:
-                return candidate
-
-    return best
+    return candidates[int(np.argmax(combined))]
 
 
 def evaluate_policy_games(

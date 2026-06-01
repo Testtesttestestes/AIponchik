@@ -40,7 +40,6 @@ def summarize(results):
     direct_target_moves = 0
     off_target_moves = 0
     short_off_target_moves = 0
-    guarded_moves = 0
 
     for result in results:
         bucket = by_difficulty.setdefault(result.difficulty, {"games": 0, "wins": 0})
@@ -58,8 +57,6 @@ def summarize(results):
                 off_target_moves += 1
                 if int(move.get("length", 0)) < 4:
                     short_off_target_moves += 1
-            if move.get("selectedBy") == "neuralPolicyTargetGuard":
-                guarded_moves += 1
 
     for bucket in by_difficulty.values():
         bucket["successRate"] = round(bucket["wins"] / bucket["games"] * 100.0, 2) if bucket["games"] else 0.0
@@ -76,7 +73,6 @@ def summarize(results):
             "offTargetMoves": off_target_moves,
             "shortOffTargetMoves": short_off_target_moves,
             "shortOffTargetRate": round(short_off_target_moves / total_moves * 100.0, 2) if total_moves else 0.0,
-            "targetGuardedMoves": guarded_moves,
         },
     }
 

@@ -513,68 +513,27 @@ def test_bot_ignores_completed_donuts_and_focuses_remaining_muffins():
     assert any("target muffin" in reason for reason in move.reasons)
 
 
-def test_neural_policy_target_guard_blocks_short_off_target_pick():
-    import numpy as np
-    from game_parser import MoveCandidate, NeuralPolicyMoveSelector
 
-    class FakeEncoder:
-        def encode(self, state, move):
-            return np.array([0.0 if move.item == "donut" else 1.0], dtype=np.float32)
+def test_policy_behavior_audit_confirms_target_features_present():
+    from inspect_policy_behavior import summarize_model_features
 
-    class FakeModel:
-        def predict(self, features):
-            return np.array([1.0, 0.8], dtype=np.float32)
+    audit = summarize_model_features("models/policy_network.json")
 
-    selector = NeuralPolicyMoveSelector.__new__(NeuralPolicyMoveSelector)
-    selector.candidates_per_move = 2
-    selector.blend_heuristic = 0.0
-    selector.model = FakeModel()
-    selector.encoder = FakeEncoder()
-    selector.pathfinder = MovePathfinder(max_paths_per_item=20, rollout_samples=0)
-    selector.last_target_guard = None
+    assert audit["featureListMatchesCode"] is True
+    assert "moves_left_norm" in audit["targetAndMoveBudgetFeaturesPresent"]
+    assert "own_target_urgency" in audit["nonConstantTargetAndMoveBudgetFeatures"]
+    assert "target_remaining_muffin" in audit["nonConstantTargetAndMoveBudgetFeatures"]
 
+
+def test_policy_behavior_audit_direct_target_yield_counts_item_and_ice():
+    from game_parser import MoveCandidate
+    from inspect_policy_behavior import direct_target_yield
+
+    pathfinder = MovePathfinder()
     state = {
-        "gameState": {"movesLeft": "12", "targets": {"muffin": "0 / 2"}},
-        "board": [["donut", "donut", "muffin", "muffin"]],
+        "gameState": {"targets": {"muffin": "0 / 2", "ice": "0 / 1"}},
+        "board": [["muffin_ice", "muffin", "donut"]],
     }
-    off_target = MoveCandidate("donut", ((0, 0), (0, 1)), 1.0, ())
-    target = MoveCandidate("muffin", ((0, 2), (0, 3)), 0.5, ())
+    move = MoveCandidate("muffin", ((0, 0), (0, 1)), 0.0, ())
 
-    ranked = selector.rank_candidates(state, [off_target, target])
-
-    assert ranked[0][0].item == "muffin"
-    assert selector.last_target_guard["applied"] is True
-    assert selector.last_target_guard["blockedItem"] == "donut"
-
-
-def test_neural_policy_target_guard_allows_long_setup_pick():
-    import numpy as np
-    from game_parser import MoveCandidate, NeuralPolicyMoveSelector
-
-    class FakeEncoder:
-        def encode(self, state, move):
-            return np.array([0.0 if move.item == "donut" else 1.0], dtype=np.float32)
-
-    class FakeModel:
-        def predict(self, features):
-            return np.array([1.0, 0.8], dtype=np.float32)
-
-    selector = NeuralPolicyMoveSelector.__new__(NeuralPolicyMoveSelector)
-    selector.candidates_per_move = 2
-    selector.blend_heuristic = 0.0
-    selector.model = FakeModel()
-    selector.encoder = FakeEncoder()
-    selector.pathfinder = MovePathfinder(max_paths_per_item=20, rollout_samples=0)
-    selector.last_target_guard = None
-
-    state = {
-        "gameState": {"movesLeft": "12", "targets": {"muffin": "0 / 2"}},
-        "board": [["donut", "donut", "donut", "donut", "muffin", "muffin"]],
-    }
-    off_target = MoveCandidate("donut", ((0, 0), (0, 1), (0, 2), (0, 3)), 1.0, ())
-    target = MoveCandidate("muffin", ((0, 4), (0, 5)), 0.5, ())
-
-    ranked = selector.rank_candidates(state, [off_target, target])
-
-    assert ranked[0][0].item == "donut"
-    assert selector.last_target_guard is None
+    assert direct_target_yield(pathfinder, state, move) == 3
