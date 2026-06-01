@@ -237,6 +237,10 @@ class NeuralMovePolicy:
                 best_val = val_loss
                 best_state = {k: v.cpu().clone() for k, v in self.model.state_dict().items()}
                 stale_epochs = 0
+                
+                if save_path:
+                    self.model.load_state_dict(best_state)
+                    self.save(save_path)
             else:
                 stale_epochs += 1
                 if stale_epochs >= config.patience:
@@ -383,7 +387,7 @@ def top1_agreement(predictions: np.ndarray, labels: np.ndarray, state_ids: np.nd
     return round(wins / states * 100.0, 2) if states else 0.0
 
 
-def train_policy(config: TrainingConfig, etalon_dir="etalon_images"):
+def train_policy(config: TrainingConfig, etalon_dir="etalon_images", save_path=None, resume_path=None):
     builder = PolicyTrainingDatasetBuilder(
         etalon_dir=etalon_dir,
         seed=config.seed,
@@ -393,8 +397,18 @@ def train_policy(config: TrainingConfig, etalon_dir="etalon_images"):
     train = builder.build(config.train_games, seed_offset=0)
     val = builder.build(config.val_games, seed_offset=100_000)
     
-    model = NeuralMovePolicy(len(FEATURE_NAMES), hidden_units=config.hidden_units, seed=config.seed, dropout=config.dropout)
-    metrics = model.fit(train, val, config)
+    # --- НОВАЯ ЛОГИКА ЗАГРУЗКИ ---
+    if resume_path:
+        print(f"🔄 Загрузка существующих весов из {resume_path}...")
+        model = NeuralMovePolicy.load(resume_path)
+        # Убедимся, что загруженная модель отправлена на правильное устройство (GPU)
+        model.model = model.model.to(model.device)
+    else:
+        print("✨ Создание новой модели с нуля...")
+        model = NeuralMovePolicy(len(FEATURE_NAMES), hidden_units=config.hidden_units, seed=config.seed, dropout=config.dropout)
+    # -----------------------------
+    
+    metrics = model.fit(train, val, config, save_path=save_path)
     
     metrics.update({
         "trainSamples": train.size,

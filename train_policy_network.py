@@ -30,6 +30,8 @@ def parse_args():
     parser.add_argument("--eval-seed", type=int, default=20260602, help="Held-out seed for post-training win-rate evaluation.")
     parser.add_argument("--target-win-rate", type=float, default=60.0, help="Target simulated win rate percentage to report against.")
     parser.add_argument("--blend-heuristic", type=float, default=0.0, help="Optional heuristic blend for evaluation only; 0 uses the neural policy alone.")
+    parser.add_argument("--resume", default=None, help="Path to existing model JSON to resume training.")
+    
     return parser.parse_args()
 
 
@@ -47,7 +49,13 @@ def main():
         patience=args.patience,
         seed=args.seed,
     )
-    model, metrics = train_policy(config, etalon_dir=args.etalon_dir)
+    
+    model, metrics = train_policy(
+        config, 
+        etalon_dir=args.etalon_dir, 
+        save_path=args.out,
+        resume_path=args.resume 
+    )
     
     print("\nStarting post-training evaluation...")
     evaluation = evaluate_policy_games(
