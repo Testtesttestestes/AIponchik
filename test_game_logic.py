@@ -213,3 +213,68 @@ def test_explicit_adb_path_is_preserved():
     explicit = r"C:\Android\platform-tools\adb.exe"
 
     assert AdbScreenReader.resolve_adb_path(explicit) == explicit
+
+
+def test_random_game_simulator_tracks_three_hit_ice_blocks(tmp_path):
+    import json
+    from game_parser import RandomGameSimulator, SimulationConfig
+
+    etalon_dir = tmp_path / "etalon"
+    etalon_dir.mkdir()
+    (etalon_dir / "level.json").write_text(json.dumps({
+        "gameState": {"movesLeft": "3", "level": "16", "targets": {"muffin": "0 / 3", "ice": "0 / 1"}},
+        "board": [["muffin_ice"]],
+    }), encoding="utf-8")
+    simulator = RandomGameSimulator(str(etalon_dir), SimulationConfig(games=1, seed=1, rows=1, cols=3, ice_hits=3))
+    board = [["muffin", "muffin", "muffin"]]
+    ice_hp = [[3, 0, 0]]
+    targets = {"muffin": 99, "ice": 1}
+
+    simulator._apply_move(board, ice_hp, ((0, 0),), targets)
+    simulator._refill_board(board, ice_hp)
+    simulator._apply_move(board, ice_hp, ((0, 0),), targets)
+    simulator._refill_board(board, ice_hp)
+    assert targets["ice"] == 1
+    assert ice_hp[0][0] == 1
+
+    simulator._apply_move(board, ice_hp, ((0, 0),), targets)
+
+    assert targets["ice"] == 0
+    assert ice_hp[0][0] == 0
+
+
+def test_simulation_report_contains_success_rate():
+    from game_parser import RandomGameSimulator, SimulationConfig
+
+    report = RandomGameSimulator("etalon_images", SimulationConfig(games=2, seed=7)).run_many(2)
+
+    assert report["summary"]["games"] == 2
+    assert "successRate" in report["summary"]
+    assert report["config"]["iceHits"] == 3
+
+
+def test_adb_play_move_converts_board_path_to_swipe_segments():
+    from game_parser import AdbScreenReader, GameBoardParser
+
+    calls = []
+
+    class FakeReader(AdbScreenReader):
+        def __init__(self):
+            pass
+
+        def ensure_device(self):
+            return None
+
+        def run_shell(self, *args, timeout=10):
+            calls.append(args)
+
+    parser = GameBoardParser()
+    parser.center_xs = [10, 20, 30]
+    parser.center_ys = [100, 200, 300]
+    move = {"path": [{"row": 0, "col": 0}, {"row": 1, "col": 1}, {"row": 2, "col": 2}]}
+
+    segments = FakeReader().play_move(parser, move, duration_ms=77)
+
+    assert segments == 2
+    assert calls[0] == ("input", "swipe", 10, 100, 20, 200, 77)
+    assert calls[1] == ("input", "swipe", 20, 200, 30, 300, 77)
