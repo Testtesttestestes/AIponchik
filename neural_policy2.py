@@ -339,6 +339,10 @@ class SelfPlayDatasetBuilder:
             local_model = NeuralMovePolicy.from_dict(self.model_payload)
             local_model.device = torch.device("cpu")
             local_model.model.to("cpu")
+            
+            local_model.mean = local_model.mean.to("cpu")
+            local_model.std = local_model.std.to("cpu")
+            
             local_model.model.eval()
 
         game_features = []
