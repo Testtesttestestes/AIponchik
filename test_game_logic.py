@@ -152,3 +152,14 @@ def test_scrcpy_stream_source_numeric_string_becomes_camera_index():
 
     assert ScrcpyStreamReader("2").source == 2
     assert ScrcpyStreamReader("/dev/video2").source == "/dev/video2"
+
+
+def test_write_json_result_creates_parent_directory(tmp_path):
+    import json
+    from game_parser import write_json_result
+
+    out_path = tmp_path / "nested" / "state.json"
+
+    write_json_result({"bestMove": None}, str(out_path))
+
+    assert json.loads(out_path.read_text()) == {"bestMove": None}

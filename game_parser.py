@@ -869,6 +869,7 @@ class GameBoardParser:
             board.append(row_data)
 
         if debug_out_path:
+            ensure_parent_dir(debug_out_path)
             cv2.imwrite(debug_out_path, debug_img)
 
         game_state = {
@@ -890,6 +891,7 @@ class GameBoardParser:
         overlay = img.copy()
         if not move or not move.get("path"):
             if out_path:
+                ensure_parent_dir(out_path)
                 cv2.imwrite(out_path, overlay)
             return overlay
 
@@ -914,6 +916,7 @@ class GameBoardParser:
         cv2.putText(overlay, label, (35, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (0, 255, 255), 3, cv2.LINE_AA)
 
         if out_path:
+            ensure_parent_dir(out_path)
             cv2.imwrite(out_path, overlay)
         return overlay
 
@@ -938,7 +941,14 @@ def analyze_state(game_state, top=10):
     return enriched
 
 
+def ensure_parent_dir(path):
+    parent = os.path.dirname(os.path.abspath(path)) if path else ""
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+
 def write_json_result(result_json, out_path):
+    ensure_parent_dir(out_path)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(result_json, f, indent=4, ensure_ascii=False)
 

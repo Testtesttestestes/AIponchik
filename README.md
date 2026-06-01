@@ -2,51 +2,82 @@
 
 Проект разбирает скриншот поля Cookie Cats-подобной игры, оценивает цепочки и показывает рассчитанный лучший ход. Скрипт **не отправляет на телефон нажатия**: он только читает кадр и сохраняет JSON, debug-изображение и изображение с оверлеем рекомендуемой цепочки.
 
-## Вариант 1: через scrcpy-трансляцию
+## Что делать, если окно scrcpy пикселит
 
-1. Подключите телефон по USB, включите USB debugging и проверьте, что устройство видно:
+Строки scrcpy вроде `Renderer: direct3d` и `Texture: 1080x2400` означают, что окно уже рендерится в полном размере текстуры. Пикселизация чаще всего появляется раньше — на этапе кодирования видеопотока телефоном. Напрямую «снять кадр из Direct3D renderer» текущий скрипт не умеет: это потребовало бы встраиваться в клиент scrcpy или менять сам scrcpy. Для алгоритма лучше использовать **ADB screencap**: он берёт PNG-скриншот напрямую с телефона, без сжатия видеопотока scrcpy, и не нажимает на экран.
 
-   ```bash
-   adb devices
-   ```
+Для более приятного ручного просмотра можно поднять битрейт scrcpy:
 
-2. Поднимите виртуальное V4L2-устройство и запустите scrcpy без управления телефоном:
-
-   ```bash
-   sudo modprobe v4l2loopback video_nr=2 card_label=scrcpy exclusive_caps=1
-   scrcpy --v4l2-sink=/dev/video2 --no-control
-   ```
-
-   `--no-control` важен для безопасного режима: scrcpy показывает экран, но не принимает ввод мышью/клавиатурой как управление телефоном.
-
-3. Откройте игру на телефоне и остановитесь на поле, где нужен совет. Затем в отдельном терминале запустите анализ одного стабильного кадра из scrcpy-потока:
-
-   ```bash
-   python game_parser.py --stream /dev/video2 --out test_images/live.json --overlay test_images/live_MOVE.jpg
-   ```
-
-4. Результаты:
-
-   * `test_images/live.json` — распознанное состояние и список лучших ходов.
-   * `test_images/live_DEBUG.jpg` — отладочная разметка распознанных клеток.
-   * `test_images/live_MOVE.jpg` — скриншот с нарисованной рекомендуемой цепочкой; это и есть рассчитанный ход, без автотапов.
-
-## Вариант 2: напрямую через ADB screencap
-
-Если V4L2 недоступен, можно не подключаться к scrcpy-потоку, а взять стабильный кадр напрямую через ADB:
-
-```bash
-python game_parser.py --adb --out test_images/adb_capture.json --overlay test_images/adb_MOVE.jpg
+```bat
+scripts\start_scrcpy_high_quality.bat
 ```
 
-Этот режим тоже ничего не нажимает на телефоне: используется только `adb exec-out screencap -p` для чтения изображения.
+По умолчанию скрипт запускает read-only mirroring с `--no-control`, `--video-bit-rate=32M`, `--max-fps=60` и Direct3D renderer. Если всё ещё мылит, попробуйте H.265 и больший битрейт:
+
+```bat
+scripts\start_scrcpy_high_quality.bat 48M h265
+```
+
+Если конкретный телефон/декодер не любит H.265, вернитесь на H.264:
+
+```bat
+scripts\start_scrcpy_high_quality.bat 48M h264
+```
+
+## Быстро получить ход на Windows
+
+1. Откройте игру на телефоне и оставьте поле неподвижным.
+2. В отдельном терминале запустите:
+
+   ```bat
+   scripts\get_move_adb.bat
+   ```
+
+3. Скрипт сохранит и откроет картинку `run_outputs\adb_MOVE.jpg` с нарисованной цепочкой лучшего хода. Также будут созданы:
+
+   * `run_outputs\adb_capture.json` — распознанное состояние и список лучших ходов.
+   * `run_outputs\adb_capture_DEBUG.jpg` — отладочная разметка распознанных клеток.
+   * `run_outputs\adb_MOVE.jpg` — скриншот с рассчитанным ходом.
+
+Если подключено несколько устройств, задайте серийник перед запуском:
+
+```bat
+set AIPONCHIK_SERIAL=YOUR_DEVICE_SERIAL
+scripts\get_move_adb.bat
+```
 
 ## Проверка на сохранённом скриншоте
 
-Для локальной проверки алгоритма без телефона:
+```bat
+scripts\get_move_from_image.bat test_images\Screenshot_2026-06-01-13-30-11-51.jpg
+```
+
+Или напрямую через Python:
 
 ```bash
-python game_parser.py --image test_images/Screenshot_2026-06-01-13-30-11-51.jpg --out test_images/check.json --overlay test_images/check_MOVE.jpg
+python game_parser.py --image test_images/Screenshot_2026-06-01-13-30-11-51.jpg --out run_outputs/check.json --overlay run_outputs/check_MOVE.jpg
 ```
+
+## Вариант через scrcpy/V4L2-поток на Linux
+
+Если нужен именно OpenCV-поток из scrcpy, на Linux можно использовать V4L2 loopback:
+
+```bash
+sudo modprobe v4l2loopback video_nr=2 card_label=scrcpy exclusive_caps=1
+scrcpy --v4l2-sink=/dev/video2 --no-control --video-bit-rate=32M
+python game_parser.py --stream /dev/video2 --out run_outputs/live.json --overlay run_outputs/live_MOVE.jpg
+```
+
+`--no-control` важен для безопасного режима: scrcpy показывает экран, но не принимает ввод мышью/клавиатурой как управление телефоном.
+
+## Вариант напрямую через ADB screencap
+
+Если не нужны bat-скрипты, можно запустить Python-команду напрямую:
+
+```bash
+python game_parser.py --adb --out run_outputs/adb_capture.json --overlay run_outputs/adb_MOVE.jpg
+```
+
+Этот режим ничего не нажимает на телефоне: используется только `adb exec-out screencap -p` для чтения изображения.
 
 В консоли будет напечатан лучший ход, а в JSON в поле `bestMove.path` будет путь по клеткам `row`/`col`.
