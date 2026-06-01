@@ -408,6 +408,8 @@ class SelfPlayDatasetBuilder:
         )
 
     def build(self, games: int, seed_offset: int = 0) -> PolicyDataset:
+        import multiprocessing as mp # Добавляем импорт прямо сюда для надежности
+        
         cores = max(1, min(os.cpu_count() or 1, games))
         print(f"Self-Play generation: {games} games on {cores} cores (ε={self.config.epsilon})...")
 
@@ -418,7 +420,9 @@ class SelfPlayDatasetBuilder:
         global_state_id = 0
         successful_games = 0
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=cores) as executor:
+        # === Явно указываем метод spawn ===
+        ctx = mp.get_context('spawn')
+        with concurrent.futures.ProcessPoolExecutor(max_workers=cores, mp_context=ctx) as executor:
             futures = [executor.submit(self._build_single_game, i, seed_offset) for i in range(1, games + 1)]
 
             for future in concurrent.futures.as_completed(futures):
