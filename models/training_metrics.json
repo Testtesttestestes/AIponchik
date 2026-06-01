@@ -1,161 +1,140 @@
 {
-  "epochsRun": 22,
-  "bestValLoss": 0.08706226199865341,
+  "epochsRun": 17,
+  "bestValLoss": 0.08979305624961853,
   "history": [
     {
       "epoch": 1,
-      "trainLoss": 0.10031354914002229,
-      "valLoss": 0.08909868448972702,
-      "valTop1Agreement": 58.67
+      "trainLoss": 0.10210738762805661,
+      "valLoss": 0.09145094454288483,
+      "valTop1Agreement": 62.64
     },
     {
       "epoch": 2,
-      "trainLoss": 0.08474755792661476,
-      "valLoss": 0.08858898282051086,
-      "valTop1Agreement": 62.86
+      "trainLoss": 0.0815635085964943,
+      "valLoss": 0.08979305624961853,
+      "valTop1Agreement": 60.94
     },
     {
       "epoch": 3,
-      "trainLoss": 0.08244395256513143,
-      "valLoss": 0.08787079900503159,
-      "valTop1Agreement": 64.95
+      "trainLoss": 0.0790161280276726,
+      "valLoss": 0.09106955677270889,
+      "valTop1Agreement": 62.26
     },
     {
       "epoch": 4,
-      "trainLoss": 0.08033437875351873,
-      "valLoss": 0.08748997747898102,
-      "valTop1Agreement": 63.81
+      "trainLoss": 0.07549084345786024,
+      "valLoss": 0.09185487776994705,
+      "valTop1Agreement": 59.81
     },
     {
       "epoch": 5,
-      "trainLoss": 0.07958378165075468,
-      "valLoss": 0.08778036385774612,
-      "valTop1Agreement": 63.05
+      "trainLoss": 0.07404226359841741,
+      "valLoss": 0.0923011526465416,
+      "valTop1Agreement": 60.0
     },
     {
       "epoch": 6,
-      "trainLoss": 0.07842957881701121,
-      "valLoss": 0.08786971867084503,
-      "valTop1Agreement": 63.24
+      "trainLoss": 0.07055404549361333,
+      "valLoss": 0.09745698422193527,
+      "valTop1Agreement": 60.75
     },
     {
       "epoch": 7,
-      "trainLoss": 0.07738246156381642,
-      "valLoss": 0.08706226199865341,
-      "valTop1Agreement": 64.0
+      "trainLoss": 0.06800732844772818,
+      "valLoss": 0.09980420023202896,
+      "valTop1Agreement": 62.08
     },
     {
       "epoch": 8,
-      "trainLoss": 0.07739671345138881,
-      "valLoss": 0.08753837645053864,
-      "valTop1Agreement": 62.86
+      "trainLoss": 0.06637817898218665,
+      "valLoss": 0.10124856233596802,
+      "valTop1Agreement": 61.89
     },
     {
       "epoch": 9,
-      "trainLoss": 0.0758272839718353,
-      "valLoss": 0.08824221789836884,
-      "valTop1Agreement": 64.76
+      "trainLoss": 0.06348034874959425,
+      "valLoss": 0.10107899457216263,
+      "valTop1Agreement": 56.23
     },
     {
       "epoch": 10,
-      "trainLoss": 0.07537605201170103,
-      "valLoss": 0.08909441530704498,
-      "valTop1Agreement": 64.76
+      "trainLoss": 0.06147519068989327,
+      "valLoss": 0.10599309206008911,
+      "valTop1Agreement": 60.38
     },
     {
       "epoch": 11,
-      "trainLoss": 0.07466753855093476,
-      "valLoss": 0.08761575073003769,
-      "valTop1Agreement": 63.24
+      "trainLoss": 0.057996297151907586,
+      "valLoss": 0.11171538382768631,
+      "valTop1Agreement": 58.68
     },
     {
       "epoch": 12,
-      "trainLoss": 0.07422992925495568,
-      "valLoss": 0.08811312913894653,
-      "valTop1Agreement": 62.86
+      "trainLoss": 0.055715044815828424,
+      "valLoss": 0.11296993494033813,
+      "valTop1Agreement": 57.74
     },
     {
       "epoch": 13,
-      "trainLoss": 0.0734503382389785,
-      "valLoss": 0.09007749706506729,
-      "valTop1Agreement": 62.48
+      "trainLoss": 0.052870570120992964,
+      "valLoss": 0.11533208936452866,
+      "valTop1Agreement": 58.87
     },
     {
       "epoch": 14,
-      "trainLoss": 0.07246721582987305,
-      "valLoss": 0.08960800617933273,
-      "valTop1Agreement": 62.29
+      "trainLoss": 0.051088118213948194,
+      "valLoss": 0.11713355034589767,
+      "valTop1Agreement": 52.45
     },
     {
       "epoch": 15,
-      "trainLoss": 0.07184093109486756,
-      "valLoss": 0.09147020429372787,
-      "valTop1Agreement": 64.19
+      "trainLoss": 0.04906487829724419,
+      "valLoss": 0.12151920050382614,
+      "valTop1Agreement": 56.04
     },
     {
       "epoch": 16,
-      "trainLoss": 0.07143868058825774,
-      "valLoss": 0.09120695292949677,
-      "valTop1Agreement": 63.24
+      "trainLoss": 0.04810489673946667,
+      "valLoss": 0.1210465356707573,
+      "valTop1Agreement": 54.72
     },
     {
       "epoch": 17,
-      "trainLoss": 0.07064917206350038,
-      "valLoss": 0.09207988530397415,
-      "valTop1Agreement": 65.14
-    },
-    {
-      "epoch": 18,
-      "trainLoss": 0.07025538450807088,
-      "valLoss": 0.09530730545520782,
-      "valTop1Agreement": 64.76
-    },
-    {
-      "epoch": 19,
-      "trainLoss": 0.06922452802701005,
-      "valLoss": 0.09275209903717041,
-      "valTop1Agreement": 64.57
-    },
-    {
-      "epoch": 20,
-      "trainLoss": 0.06840938030355577,
-      "valLoss": 0.09249037504196167,
-      "valTop1Agreement": 64.38
-    },
-    {
-      "epoch": 21,
-      "trainLoss": 0.06778751453002343,
-      "valLoss": 0.09415344893932343,
-      "valTop1Agreement": 63.62
-    },
-    {
-      "epoch": 22,
-      "trainLoss": 0.06676911721294317,
-      "valLoss": 0.09555656462907791,
-      "valTop1Agreement": 64.57
+      "trainLoss": 0.04512599458902832,
+      "valLoss": 0.13306133449077606,
+      "valTop1Agreement": 54.34
     }
   ],
-  "trainTop1Agreement": 63.8,
-  "valTop1Agreement": 64.0,
-  "trainSamples": 25328,
-  "valSamples": 8400,
-  "trainStates": 1583,
-  "valStates": 525,
+  "trainTop1Agreement": 63.27,
+  "valTop1Agreement": 60.94,
+  "trainSamples": 21648,
+  "valSamples": 8480,
+  "trainStates": 1353,
+  "valStates": 530,
+  "successfulGamesOnly": true,
+  "trainGamesKept": 104,
+  "trainGamesDiscarded": 106,
+  "trainTeacherWins": 104,
+  "trainAttemptedStates": 3442,
+  "valGamesKept": 38,
+  "valGamesDiscarded": 32,
+  "valTeacherWins": 38,
+  "valAttemptedStates": 1191,
   "policyEvaluation": {
     "games": 50,
-    "wins": 27,
-    "losses": 23,
-    "successRate": 54.0,
+    "wins": 23,
+    "losses": 27,
+    "successRate": 46.0,
     "byDifficulty": {
       "easy": {
         "games": 17,
-        "wins": 14,
-        "successRate": 82.35
+        "wins": 13,
+        "successRate": 76.47
       },
       "normal": {
         "games": 17,
-        "wins": 8,
-        "successRate": 47.06
+        "wins": 5,
+        "successRate": 29.41
       },
       "hard": {
         "games": 16,
@@ -179,12 +158,13 @@
       {
         "gameIndex": 2,
         "difficulty": "normal",
-        "success": true,
-        "movesUsed": 9,
-        "movesLimit": 12,
+        "success": false,
+        "movesUsed": 23,
+        "movesLimit": 23,
         "targetsRemaining": {
           "muffin": 0,
-          "biscuit": 0
+          "biscuit": 4,
+          "ice": 2
         }
       },
       {
@@ -194,53 +174,52 @@
         "movesUsed": 21,
         "movesLimit": 21,
         "targetsRemaining": {
-          "muffin": 6,
-          "biscuit": 3,
-          "ice": 3
+          "donut": 11,
+          "biscuit": 0
         }
       },
       {
         "gameIndex": 4,
         "difficulty": "easy",
-        "success": false,
-        "movesUsed": 26,
-        "movesLimit": 26,
+        "success": true,
+        "movesUsed": 16,
+        "movesLimit": 18,
         "targetsRemaining": {
+          "muffin": 0,
           "biscuit": 0,
-          "chocolate": 0,
-          "ice": 1
+          "ice": 0
         }
       },
       {
         "gameIndex": 5,
         "difficulty": "normal",
         "success": false,
-        "movesUsed": 24,
-        "movesLimit": 24,
+        "movesUsed": 23,
+        "movesLimit": 23,
         "targetsRemaining": {
-          "donut": 2,
-          "biscuit": 0
+          "muffin": 0,
+          "biscuit": 0,
+          "ice": 4
         }
       },
       {
         "gameIndex": 6,
         "difficulty": "hard",
         "success": true,
-        "movesUsed": 7,
-        "movesLimit": 9,
+        "movesUsed": 4,
+        "movesLimit": 8,
         "targetsRemaining": {
-          "muffin": 0,
           "biscuit": 0
         }
       },
       {
         "gameIndex": 7,
         "difficulty": "easy",
-        "success": false,
-        "movesUsed": 28,
-        "movesLimit": 28,
+        "success": true,
+        "movesUsed": 19,
+        "movesLimit": 26,
         "targetsRemaining": {
-          "donut": 4,
+          "muffin": 0,
           "biscuit": 0
         }
       },
@@ -248,8 +227,8 @@
         "gameIndex": 8,
         "difficulty": "normal",
         "success": true,
-        "movesUsed": 2,
-        "movesLimit": 12,
+        "movesUsed": 21,
+        "movesLimit": 24,
         "targetsRemaining": {
           "muffin": 0,
           "biscuit": 0
@@ -259,22 +238,24 @@
         "gameIndex": 9,
         "difficulty": "hard",
         "success": false,
-        "movesUsed": 16,
-        "movesLimit": 16,
+        "movesUsed": 19,
+        "movesLimit": 19,
         "targetsRemaining": {
-          "muffin": 7,
-          "biscuit": 0
+          "biscuit": 9,
+          "chocolate": 5,
+          "ice": 4
         }
       },
       {
         "gameIndex": 10,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 16,
-        "movesLimit": 26,
+        "movesUsed": 28,
+        "movesLimit": 28,
         "targetsRemaining": {
           "muffin": 0,
-          "biscuit": 0
+          "biscuit": 0,
+          "ice": 0
         }
       },
       {
@@ -284,39 +265,40 @@
         "movesUsed": 24,
         "movesLimit": 24,
         "targetsRemaining": {
-          "donut": 3,
-          "biscuit": 11
+          "donut": 0,
+          "biscuit": 1
         }
       },
       {
         "gameIndex": 12,
         "difficulty": "hard",
-        "success": false,
-        "movesUsed": 16,
-        "movesLimit": 16,
-        "targetsRemaining": {
-          "muffin": 3,
-          "biscuit": 2
-        }
-      },
-      {
-        "gameIndex": 13,
-        "difficulty": "easy",
         "success": true,
-        "movesUsed": 12,
-        "movesLimit": 26,
+        "movesUsed": 19,
+        "movesLimit": 19,
         "targetsRemaining": {
           "muffin": 0,
           "biscuit": 0
         }
       },
       {
+        "gameIndex": 13,
+        "difficulty": "easy",
+        "success": true,
+        "movesUsed": 17,
+        "movesLimit": 28,
+        "targetsRemaining": {
+          "donut": 0,
+          "biscuit": 0
+        }
+      },
+      {
         "gameIndex": 14,
         "difficulty": "normal",
-        "success": true,
-        "movesUsed": 4,
-        "movesLimit": 8,
+        "success": false,
+        "movesUsed": 23,
+        "movesLimit": 23,
         "targetsRemaining": {
+          "donut": 6,
           "biscuit": 0
         }
       },
@@ -324,77 +306,79 @@
         "gameIndex": 15,
         "difficulty": "hard",
         "success": false,
-        "movesUsed": 21,
-        "movesLimit": 21,
+        "movesUsed": 11,
+        "movesLimit": 11,
         "targetsRemaining": {
-          "donut": 6,
-          "biscuit": 10
+          "muffin": 5,
+          "biscuit": 7,
+          "ice": 1
         }
       },
       {
         "gameIndex": 16,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 13,
-        "movesLimit": 23,
+        "movesUsed": 14,
+        "movesLimit": 18,
         "targetsRemaining": {
           "muffin": 0,
-          "biscuit": 0
+          "biscuit": 0,
+          "ice": 0
         }
       },
       {
         "gameIndex": 17,
         "difficulty": "normal",
-        "success": false,
-        "movesUsed": 23,
-        "movesLimit": 23,
+        "success": true,
+        "movesUsed": 2,
+        "movesLimit": 8,
         "targetsRemaining": {
-          "muffin": 0,
-          "biscuit": 7,
-          "ice": 3
+          "biscuit": 0
         }
       },
       {
         "gameIndex": 18,
         "difficulty": "hard",
-        "success": true,
-        "movesUsed": 18,
-        "movesLimit": 19,
+        "success": false,
+        "movesUsed": 20,
+        "movesLimit": 20,
         "targetsRemaining": {
-          "muffin": 0,
+          "donut": 12,
           "biscuit": 0
         }
       },
       {
         "gameIndex": 19,
         "difficulty": "easy",
-        "success": true,
-        "movesUsed": 18,
-        "movesLimit": 27,
+        "success": false,
+        "movesUsed": 28,
+        "movesLimit": 28,
         "targetsRemaining": {
-          "donut": 0,
-          "biscuit": 0
+          "muffin": 0,
+          "biscuit": 0,
+          "ice": 1
         }
       },
       {
         "gameIndex": 20,
         "difficulty": "normal",
-        "success": true,
-        "movesUsed": 24,
-        "movesLimit": 24,
+        "success": false,
+        "movesUsed": 23,
+        "movesLimit": 23,
         "targetsRemaining": {
           "muffin": 0,
-          "biscuit": 0
+          "biscuit": 3,
+          "ice": 3
         }
       },
       {
         "gameIndex": 21,
         "difficulty": "hard",
-        "success": true,
-        "movesUsed": 13,
-        "movesLimit": 16,
+        "success": false,
+        "movesUsed": 21,
+        "movesLimit": 21,
         "targetsRemaining": {
-          "donut": 0,
+          "muffin": 12,
           "biscuit": 0
         }
       },
@@ -402,86 +386,18 @@
         "gameIndex": 22,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 18,
-        "movesLimit": 27,
+        "movesUsed": 11,
+        "movesLimit": 16,
         "targetsRemaining": {
-          "donut": 0,
+          "muffin": 0,
           "biscuit": 0
         }
       },
       {
         "gameIndex": 23,
         "difficulty": "normal",
-        "success": false,
-        "movesUsed": 24,
-        "movesLimit": 24,
-        "targetsRemaining": {
-          "donut": 0,
-          "biscuit": 3
-        }
-      },
-      {
-        "gameIndex": 24,
-        "difficulty": "hard",
-        "success": false,
-        "movesUsed": 21,
-        "movesLimit": 21,
-        "targetsRemaining": {
-          "muffin": 12,
-          "biscuit": 11
-        }
-      },
-      {
-        "gameIndex": 25,
-        "difficulty": "easy",
-        "success": true,
-        "movesUsed": 19,
-        "movesLimit": 28,
-        "targetsRemaining": {
-          "muffin": 0,
-          "biscuit": 0
-        }
-      },
-      {
-        "gameIndex": 26,
-        "difficulty": "normal",
-        "success": false,
-        "movesUsed": 22,
-        "movesLimit": 22,
-        "targetsRemaining": {
-          "biscuit": 0,
-          "chocolate": 0,
-          "ice": 2
-        }
-      },
-      {
-        "gameIndex": 27,
-        "difficulty": "hard",
-        "success": false,
-        "movesUsed": 21,
-        "movesLimit": 21,
-        "targetsRemaining": {
-          "muffin": 8,
-          "biscuit": 13,
-          "ice": 1
-        }
-      },
-      {
-        "gameIndex": 28,
-        "difficulty": "easy",
         "success": true,
         "movesUsed": 16,
-        "movesLimit": 23,
-        "targetsRemaining": {
-          "muffin": 0,
-          "biscuit": 0
-        }
-      },
-      {
-        "gameIndex": 29,
-        "difficulty": "normal",
-        "success": true,
-        "movesUsed": 13,
         "movesLimit": 19,
         "targetsRemaining": {
           "donut": 0,
@@ -489,22 +405,91 @@
         }
       },
       {
-        "gameIndex": 30,
+        "gameIndex": 24,
         "difficulty": "hard",
         "success": true,
-        "movesUsed": 7,
-        "movesLimit": 9,
+        "movesUsed": 14,
+        "movesLimit": 16,
+        "targetsRemaining": {
+          "donut": 0,
+          "biscuit": 0
+        }
+      },
+      {
+        "gameIndex": 25,
+        "difficulty": "easy",
+        "success": true,
+        "movesUsed": 23,
+        "movesLimit": 28,
+        "targetsRemaining": {
+          "donut": 0,
+          "biscuit": 0
+        }
+      },
+      {
+        "gameIndex": 26,
+        "difficulty": "normal",
+        "success": false,
+        "movesUsed": 23,
+        "movesLimit": 23,
         "targetsRemaining": {
           "muffin": 0,
-          "biscuit": 0
+          "biscuit": 4,
+          "ice": 1
+        }
+      },
+      {
+        "gameIndex": 27,
+        "difficulty": "hard",
+        "success": false,
+        "movesUsed": 16,
+        "movesLimit": 16,
+        "targetsRemaining": {
+          "donut": 0,
+          "biscuit": 4
+        }
+      },
+      {
+        "gameIndex": 28,
+        "difficulty": "easy",
+        "success": false,
+        "movesUsed": 28,
+        "movesLimit": 28,
+        "targetsRemaining": {
+          "muffin": 0,
+          "biscuit": 0,
+          "ice": 1
+        }
+      },
+      {
+        "gameIndex": 29,
+        "difficulty": "normal",
+        "success": false,
+        "movesUsed": 18,
+        "movesLimit": 18,
+        "targetsRemaining": {
+          "biscuit": 0,
+          "chocolate": 0,
+          "ice": 3
+        }
+      },
+      {
+        "gameIndex": 30,
+        "difficulty": "hard",
+        "success": false,
+        "movesUsed": 16,
+        "movesLimit": 16,
+        "targetsRemaining": {
+          "donut": 0,
+          "biscuit": 1
         }
       },
       {
         "gameIndex": 31,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 5,
-        "movesLimit": 23,
+        "movesUsed": 15,
+        "movesLimit": 27,
         "targetsRemaining": {
           "donut": 0,
           "biscuit": 0
@@ -513,33 +498,29 @@
       {
         "gameIndex": 32,
         "difficulty": "normal",
-        "success": false,
-        "movesUsed": 22,
-        "movesLimit": 22,
+        "success": true,
+        "movesUsed": 2,
+        "movesLimit": 8,
         "targetsRemaining": {
-          "biscuit": 9,
-          "chocolate": 0,
-          "ice": 4
+          "biscuit": 0
         }
       },
       {
         "gameIndex": 33,
         "difficulty": "hard",
-        "success": false,
-        "movesUsed": 19,
-        "movesLimit": 19,
+        "success": true,
+        "movesUsed": 3,
+        "movesLimit": 8,
         "targetsRemaining": {
-          "biscuit": 6,
-          "chocolate": 0,
-          "ice": 5
+          "biscuit": 0
         }
       },
       {
         "gameIndex": 34,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 20,
-        "movesLimit": 27,
+        "movesUsed": 13,
+        "movesLimit": 23,
         "targetsRemaining": {
           "donut": 0,
           "biscuit": 0
@@ -549,8 +530,8 @@
         "gameIndex": 35,
         "difficulty": "normal",
         "success": true,
-        "movesUsed": 23,
-        "movesLimit": 24,
+        "movesUsed": 16,
+        "movesLimit": 22,
         "targetsRemaining": {
           "muffin": 0,
           "biscuit": 0
@@ -563,17 +544,16 @@
         "movesUsed": 20,
         "movesLimit": 20,
         "targetsRemaining": {
-          "muffin": 1,
-          "biscuit": 12,
-          "ice": 2
+          "donut": 6,
+          "biscuit": 0
         }
       },
       {
         "gameIndex": 37,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 22,
-        "movesLimit": 27,
+        "movesUsed": 19,
+        "movesLimit": 23,
         "targetsRemaining": {
           "donut": 0,
           "biscuit": 0
@@ -582,21 +562,22 @@
       {
         "gameIndex": 38,
         "difficulty": "normal",
-        "success": true,
+        "success": false,
         "movesUsed": 23,
         "movesLimit": 23,
         "targetsRemaining": {
-          "donut": 0,
+          "donut": 4,
           "biscuit": 0
         }
       },
       {
         "gameIndex": 39,
         "difficulty": "hard",
-        "success": true,
-        "movesUsed": 6,
-        "movesLimit": 8,
+        "success": false,
+        "movesUsed": 20,
+        "movesLimit": 20,
         "targetsRemaining": {
+          "donut": 11,
           "biscuit": 0
         }
       },
@@ -604,41 +585,43 @@
         "gameIndex": 40,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 3,
-        "movesLimit": 11,
+        "movesUsed": 24,
+        "movesLimit": 26,
         "targetsRemaining": {
-          "biscuit": 0
+          "biscuit": 0,
+          "chocolate": 0,
+          "ice": 0
         }
       },
       {
         "gameIndex": 41,
         "difficulty": "normal",
         "success": false,
-        "movesUsed": 24,
-        "movesLimit": 24,
+        "movesUsed": 22,
+        "movesLimit": 22,
         "targetsRemaining": {
-          "donut": 1,
-          "biscuit": 0
+          "muffin": 0,
+          "biscuit": 1
         }
       },
       {
         "gameIndex": 42,
         "difficulty": "hard",
         "success": false,
-        "movesUsed": 21,
-        "movesLimit": 21,
+        "movesUsed": 15,
+        "movesLimit": 15,
         "targetsRemaining": {
-          "muffin": 11,
-          "biscuit": 14,
-          "ice": 3
+          "biscuit": 0,
+          "chocolate": 0,
+          "ice": 6
         }
       },
       {
         "gameIndex": 43,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 17,
-        "movesLimit": 27,
+        "movesUsed": 28,
+        "movesLimit": 28,
         "targetsRemaining": {
           "muffin": 0,
           "biscuit": 0,
@@ -654,51 +637,51 @@
         "targetsRemaining": {
           "biscuit": 0,
           "chocolate": 0,
-          "ice": 3
+          "ice": 1
         }
       },
       {
         "gameIndex": 45,
         "difficulty": "hard",
         "success": false,
-        "movesUsed": 15,
-        "movesLimit": 15,
+        "movesUsed": 21,
+        "movesLimit": 21,
         "targetsRemaining": {
-          "biscuit": 0,
-          "chocolate": 0,
-          "ice": 5
+          "muffin": 12,
+          "biscuit": 7
         }
       },
       {
         "gameIndex": 46,
         "difficulty": "easy",
-        "success": true,
-        "movesUsed": 24,
-        "movesLimit": 28,
+        "success": false,
+        "movesUsed": 26,
+        "movesLimit": 26,
         "targetsRemaining": {
-          "muffin": 0,
-          "biscuit": 0
+          "biscuit": 0,
+          "chocolate": 0,
+          "ice": 1
         }
       },
       {
         "gameIndex": 47,
         "difficulty": "normal",
-        "success": true,
-        "movesUsed": 19,
-        "movesLimit": 22,
+        "success": false,
+        "movesUsed": 24,
+        "movesLimit": 24,
         "targetsRemaining": {
-          "muffin": 0,
-          "biscuit": 0
+          "muffin": 8,
+          "biscuit": 3
         }
       },
       {
         "gameIndex": 48,
         "difficulty": "hard",
-        "success": false,
-        "movesUsed": 9,
+        "success": true,
+        "movesUsed": 5,
         "movesLimit": 9,
         "targetsRemaining": {
-          "muffin": 2,
+          "muffin": 0,
           "biscuit": 0
         }
       },
@@ -706,24 +689,23 @@
         "gameIndex": 49,
         "difficulty": "easy",
         "success": true,
-        "movesUsed": 16,
-        "movesLimit": 22,
+        "movesUsed": 17,
+        "movesLimit": 23,
         "targetsRemaining": {
-          "biscuit": 0,
-          "chocolate": 0,
-          "ice": 0
+          "donut": 0,
+          "biscuit": 0
         }
       },
       {
         "gameIndex": 50,
         "difficulty": "normal",
         "success": false,
-        "movesUsed": 23,
-        "movesLimit": 23,
+        "movesUsed": 22,
+        "movesLimit": 22,
         "targetsRemaining": {
-          "muffin": 0,
-          "biscuit": 10,
-          "ice": 3
+          "biscuit": 0,
+          "chocolate": 0,
+          "ice": 5
         }
       }
     ]
