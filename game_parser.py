@@ -17,6 +17,30 @@ BoardPath = Tuple[BoardPoint, ...]
 
 
 @dataclass(frozen=True)
+class HeuristicWeights:
+    """Tunable move utility weights for immediate and future board quality."""
+
+    immediate: float = 1.0
+    future: float = 0.35
+    cluster: float = 3.0
+    orphan: float = 8.0
+    ice_target: float = 6.0
+
+
+@dataclass(frozen=True)
+class BoardEvaluation:
+    """Detailed heuristic estimate of how playable a board is after a move."""
+
+    score: float
+    cluster_score: float
+    orphan_penalty: float
+    ice_target_score: float
+    cluster_count: int
+    orphan_count: int
+    reasons: Tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class MoveCandidate:
     """A valid chain and its heuristic value for the current level state."""
 
@@ -37,6 +61,191 @@ class MoveCandidate:
             "path": [{"row": row, "col": col} for row, col in self.path],
             "reasons": list(self.reasons),
         }
+
+
+class FutureBoardEvaluator:
+    """Score the guaranteed board quality after a line-drawing move.
+
+    EMPTY cells are pass-through gaps, not falling tiles.  Known pieces slide
+    through them during gravity, while cells emptied at the top are ignored by
+    connectivity calculations so random incoming drops are not guessed.
+    """
+
+    BLOCKED = {"", "EMPTY", "ERROR", "unknown", None}
+
+    def __init__(self, weights=None, orphan_neighbor_threshold=1):
+        self.weights = weights or HeuristicWeights()
+        self.orphan_neighbor_threshold = orphan_neighbor_threshold
+
+    @staticmethod
+    def base_item(cell):
+        if cell in FutureBoardEvaluator.BLOCKED:
+            return None
+        if isinstance(cell, str) and cell.endswith("_ice"):
+            return cell[:-4]
+        return cell
+
+    @staticmethod
+    def has_ice(cell):
+        return isinstance(cell, str) and cell.endswith("_ice")
+
+    @staticmethod
+    def _neighbors(row, col, rows, cols):
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                if dr == 0 and dc == 0:
+                    continue
+                nr, nc = row + dr, col + dc
+                if 0 <= nr < rows and 0 <= nc < cols:
+                    yield nr, nc
+
+    def simulate_after_move(self, board, path):
+        """Remove ``path`` and let known pieces slide through EMPTY gaps."""
+        if not board:
+            return []
+
+        rows = len(board)
+        cols = len(board[0])
+        removed = set(path)
+        collapsed = [["EMPTY" for _ in range(cols)] for _ in range(rows)]
+
+        for col in range(cols):
+            survivors = [
+                board[row][col]
+                for row in range(rows - 1, -1, -1)
+                if (row, col) not in removed and self.base_item(board[row][col]) is not None
+            ]
+            write_row = rows - 1
+            for cell in survivors:
+                collapsed[write_row][col] = cell
+                write_row -= 1
+        return collapsed
+
+    def evaluate(self, board, targets=None):
+        rows = len(board)
+        cols = len(board[0]) if rows else 0
+        if rows == 0 or cols == 0:
+            return BoardEvaluation(0.0, 0.0, 0.0, 0.0, 0, 0, ("empty board",))
+
+        visited = set()
+        cluster_sizes = []
+        orphan_count = 0
+
+        for row in range(rows):
+            for col in range(cols):
+                item = self.base_item(board[row][col])
+                if item is None:
+                    continue
+
+                same_neighbors = sum(
+                    1
+                    for nr, nc in self._neighbors(row, col, rows, cols)
+                    if self.base_item(board[nr][nc]) == item
+                )
+                if same_neighbors <= self.orphan_neighbor_threshold:
+                    orphan_count += 1
+
+                if (row, col) in visited:
+                    continue
+                stack = [(row, col)]
+                visited.add((row, col))
+                size = 0
+                while stack:
+                    cr, cc = stack.pop()
+                    size += 1
+                    for nr, nc in self._neighbors(cr, cc, rows, cols):
+                        if (nr, nc) in visited:
+                            continue
+                        if self.base_item(board[nr][nc]) != item:
+                            continue
+                        visited.add((nr, nc))
+                        stack.append((nr, nc))
+                cluster_sizes.append(size)
+
+        playable_count = sum(cluster_sizes)
+        cluster_score = (sum(size * size for size in cluster_sizes) / playable_count) if playable_count else 0.0
+        orphan_penalty = float(orphan_count)
+        ice_target_score = self._score_ice_targets(board, targets or {})
+
+        score = (
+            self.weights.cluster * cluster_score
+            - self.weights.orphan * orphan_penalty
+            + self.weights.ice_target * ice_target_score
+        )
+        reasons = (
+            f"future clusters: {len(cluster_sizes)} group(s), weighted avg {cluster_score:.2f}",
+            f"future orphans: -{orphan_penalty:.0f}",
+            f"future ice targets: +{ice_target_score:.1f}",
+        )
+        return BoardEvaluation(
+            score=score,
+            cluster_score=cluster_score,
+            orphan_penalty=orphan_penalty,
+            ice_target_score=ice_target_score,
+            cluster_count=len(cluster_sizes),
+            orphan_count=orphan_count,
+            reasons=reasons,
+        )
+
+    def _score_ice_targets(self, board, targets):
+        """Reward iced cells that remain directly collectable in a future chain."""
+        normalized_targets = self._normalize_targets(targets)
+        ice_target = normalized_targets.get("ice")
+        if not ice_target or ice_target["remaining"] <= 0:
+            return 0.0
+
+        rows = len(board)
+        cols = len(board[0]) if rows else 0
+        score = 0.0
+        remaining_ice = ice_target["remaining"]
+        visited = set()
+        for row in range(rows):
+            for col in range(cols):
+                if (row, col) in visited:
+                    continue
+                item = self.base_item(board[row][col])
+                if item is None:
+                    continue
+
+                stack = [(row, col)]
+                visited.add((row, col))
+                component = []
+                iced_count = 0
+                while stack:
+                    cr, cc = stack.pop()
+                    component.append((cr, cc))
+                    if self.has_ice(board[cr][cc]):
+                        iced_count += 1
+                    for nr, nc in self._neighbors(cr, cc, rows, cols):
+                        if (nr, nc) in visited:
+                            continue
+                        if self.base_item(board[nr][nc]) != item:
+                            continue
+                        visited.add((nr, nc))
+                        stack.append((nr, nc))
+
+                if iced_count == 0 or remaining_ice <= 0:
+                    continue
+                component_size = len(component)
+                useful_ice = min(iced_count, remaining_ice)
+                remaining_ice -= useful_ice
+                if component_size >= 3:
+                    score += useful_ice * 2.0
+                elif component_size == 2:
+                    score += useful_ice * 0.75
+        return score
+
+    def _normalize_targets(self, targets):
+        normalized = {}
+        for raw_name, raw_value in (targets or {}).items():
+            name = MovePathfinder.TARGET_ALIASES.get(str(raw_name), str(raw_name))
+            current, total = MovePathfinder._parse_target_progress(raw_value)
+            normalized[name] = {
+                "current": current,
+                "total": total,
+                "remaining": max(0, total - current),
+            }
+        return normalized
 
 
 class MovePathfinder:
@@ -62,9 +271,11 @@ class MovePathfinder:
         "ice": "ice",
     }
 
-    def __init__(self, min_length=3, max_paths_per_item=20000):
+    def __init__(self, min_length=3, max_paths_per_item=20000, weights=None):
         self.min_length = min_length
         self.max_paths_per_item = max_paths_per_item
+        self.weights = weights or HeuristicWeights()
+        self.future_evaluator = FutureBoardEvaluator(self.weights)
 
     @staticmethod
     def base_item(cell):
@@ -135,7 +346,7 @@ class MovePathfinder:
         scored = []
         for path in paths:
             item = self.base_item(board[path[0][0]][path[0][1]])
-            score, reasons = self.score_path(board, targets, item, path)
+            score, reasons = self.score_move(board, targets, item, path)
             scored.append(MoveCandidate(item=item, path=tuple(path), score=score, reasons=tuple(reasons)))
         scored.sort(key=lambda move: (move.score, move.length), reverse=True)
         return scored
@@ -145,6 +356,20 @@ class MovePathfinder:
         targets = game_state.get("gameState", {}).get("targets", {})
         paths = self.find_paths(board)
         return self.score_paths(board, targets, paths)[:limit]
+
+    def score_move(self, board, targets, item, path):
+        """Score a move as immediate reward plus future board quality."""
+        immediate_score, immediate_reasons = self.score_path(board, targets, item, path)
+        next_board = self.future_evaluator.simulate_after_move(board, path)
+        future = self.future_evaluator.evaluate(next_board, targets)
+        total = self.weights.immediate * immediate_score + self.weights.future * future.score
+        reasons = [
+            f"utility {self.weights.immediate:.2f}*immediate {immediate_score:.2f} "
+            f"+ {self.weights.future:.2f}*future {future.score:.2f}",
+            *immediate_reasons,
+            *future.reasons,
+        ]
+        return total, reasons
 
     def score_path(self, board, targets, item, path):
         score = float(len(path))
