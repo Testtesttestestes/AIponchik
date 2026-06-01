@@ -346,15 +346,17 @@ class MovePathfinder:
                 if 0 <= nr < rows and 0 <= nc < cols:
                     yield nr, nc
 
-    def find_paths(self, board):
+    def find_paths(self, board, allowed_items=None, max_paths_per_item=None):
         rows = len(board)
         cols = len(board[0]) if rows else 0
+        allowed_items = set(allowed_items) if allowed_items is not None else None
+        max_paths_per_item = max_paths_per_item or self.max_paths_per_item
         paths = []
         seen = set()
         counts_by_item = {}
 
         def dfs(item, row, col, visited, path):
-            if counts_by_item.get(item, 0) >= self.max_paths_per_item:
+            if counts_by_item.get(item, 0) >= max_paths_per_item:
                 return
             if len(path) >= self.min_length:
                 key = (item, self._canonical_path(path))
@@ -362,7 +364,7 @@ class MovePathfinder:
                     seen.add(key)
                     paths.append(tuple(path))
                     counts_by_item[item] = counts_by_item.get(item, 0) + 1
-                    if counts_by_item[item] >= self.max_paths_per_item:
+                    if counts_by_item[item] >= max_paths_per_item:
                         return
 
             for nr, nc in self._neighbors(row, col, rows, cols):
@@ -381,7 +383,9 @@ class MovePathfinder:
                 item = self.base_item(board[row][col])
                 if item is None:
                     continue
-                if counts_by_item.get(item, 0) >= self.max_paths_per_item:
+                if allowed_items is not None and item not in allowed_items:
+                    continue
+                if counts_by_item.get(item, 0) >= max_paths_per_item:
                     continue
                 dfs(item, row, col, {(row, col)}, [(row, col)])
         return paths
@@ -407,14 +411,82 @@ class MovePathfinder:
         immediate_score, immediate_reasons = self.score_path(board, targets, item, path, moves_left=moves_left)
         next_board = self.future_evaluator.simulate_after_move(board, path)
         future = self.future_evaluator.evaluate(next_board, targets)
-        total = self.weights.immediate * immediate_score + self.weights.future * future.score
+        best_future_target_yield = self._best_future_target_yield(next_board, targets)
+
+        w_future = self.weights.future
+        if moves_left is not None and moves_left <= 5:
+            w_future *= max(0.0, (moves_left - 1) / 4.0)
+
+        total = (
+            self.weights.immediate * immediate_score
+            + w_future * future.score
+            + best_future_target_yield
+        )
         reasons = [
-            f"utility {self.weights.immediate:.2f}*immediate {immediate_score:.2f} "
-            f"+ {self.weights.future:.2f}*future {future.score:.2f}",
+            f"utility immediate {immediate_score:.2f} + future_board {future.score:.2f} "
+            f"+ next_move_yield {best_future_target_yield:.1f}",
             *immediate_reasons,
             *future.reasons,
         ]
+        if best_future_target_yield > 0:
+            reasons.append(f"guaranteed depth-2 target yield: +{best_future_target_yield:.1f}")
         return total, reasons
+
+    def _best_future_target_yield(self, board, targets):
+        """Return the best guaranteed target collection opened on ``board``."""
+        normalized_targets = self._normalize_targets(targets)
+        ice_target_data = normalized_targets.get("ice")
+        target_items = {
+            name
+            for name, data in normalized_targets.items()
+            if name != "ice" and data["remaining"] > 0
+        }
+        ice_items = (
+            self._items_with_collectable_ice(board)
+            if ice_target_data and ice_target_data["remaining"] > 0
+            else set()
+        )
+        allowed_items = target_items | ice_items
+        if not allowed_items:
+            return 0.0
+
+        best_yield = 0.0
+        max_target_yield = max(
+            (data["remaining"] * 15.0 for name, data in normalized_targets.items() if name in target_items),
+            default=0.0,
+        )
+        max_ice_yield = ice_target_data["remaining"] * 12.0 if ice_target_data else 0.0
+        max_possible_yield = max_target_yield + max_ice_yield
+
+        for future_path in self.find_paths(board, allowed_items=allowed_items, max_paths_per_item=12):
+            future_item = self.base_item(board[future_path[0][0]][future_path[0][1]])
+            target_data = normalized_targets.get(future_item)
+            yield_score = 0.0
+
+            if target_data and target_data["remaining"] > 0:
+                yield_score += min(len(future_path), target_data["remaining"]) * 15.0
+
+            ice_hits = sum(1 for row, col in future_path if self.has_ice(board[row][col]))
+            if ice_hits and ice_target_data and ice_target_data["remaining"] > 0:
+                yield_score += min(ice_hits, ice_target_data["remaining"]) * 12.0
+
+            if yield_score > best_yield:
+                best_yield = yield_score
+                if best_yield >= max_possible_yield:
+                    break
+
+        return best_yield
+
+    def _items_with_collectable_ice(self, board):
+        """Return base items that could break ice in a future legal chain."""
+        items = set()
+        for row in board:
+            for cell in row:
+                if self.has_ice(cell):
+                    item = self.base_item(cell)
+                    if item is not None:
+                        items.add(item)
+        return items
 
     def score_path(self, board, targets, item, path, moves_left=None):
         score = float(len(path))
@@ -449,17 +521,6 @@ class MovePathfinder:
             )
             score += pressure_bonus
             reasons.extend(pressure_reasons)
-
-        if moves_left and moves_left > 0:
-            urgent_targets = [
-                data["remaining"] / moves_left
-                for name, data in normalized_targets.items()
-                if data["remaining"] > 0 and name not in {item, "ice"}
-            ]
-            if urgent_targets and max(urgent_targets) >= 3.0 and not target and not ice_count:
-                penalty = min(30.0, sum(urgent_targets) * 4.0)
-                score -= penalty
-                reasons.append(f"move budget pressure: -{penalty:.0f} for non-target move")
 
         if not completed_item_target:
             if len(path) >= 6:

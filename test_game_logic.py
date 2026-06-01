@@ -154,6 +154,63 @@ def test_future_evaluator_rewards_clusters_over_orphans():
     assert clustered.score > orphaned.score
 
 
+def test_non_target_clearance_move_has_no_urgent_budget_penalty():
+    board = [["donut", "donut", "donut"], ["muffin", "red", "biscuit"]]
+    path = ((0, 0), (0, 1), (0, 2))
+
+    score, reasons = MovePathfinder().score_path(
+        board,
+        {"muffin": "0 / 9"},
+        "donut",
+        path,
+        moves_left=2,
+    )
+
+    assert score == 3.0
+    assert not any("non-target move" in reason for reason in reasons)
+
+
+def test_score_move_scales_future_board_weight_in_endgame():
+    from game_parser import BoardEvaluation, HeuristicWeights
+
+    class FakeFutureEvaluator:
+        def simulate_after_move(self, board, path):
+            return [["EMPTY", "EMPTY", "EMPTY"]]
+
+        def evaluate(self, board, targets):
+            return BoardEvaluation(100.0, 0.0, 0.0, 0.0, 0, 0, ("fake future",))
+
+    board = [["donut", "donut", "donut"]]
+    path = ((0, 0), (0, 1), (0, 2))
+    pathfinder = MovePathfinder(weights=HeuristicWeights(immediate=1.0, future=0.4))
+    pathfinder.future_evaluator = FakeFutureEvaluator()
+
+    full_future_score, _ = pathfinder.score_move(board, {}, "donut", path, moves_left=6)
+    last_move_score, _ = pathfinder.score_move(board, {}, "donut", path, moves_left=1)
+
+    assert full_future_score == 43.0
+    assert last_move_score == 3.0
+
+
+def test_score_move_adds_guaranteed_depth_two_target_yield():
+    board = [
+        ["donut", "donut", "donut"],
+        ["muffin", "muffin", "muffin"],
+    ]
+    path = ((0, 0), (0, 1), (0, 2))
+
+    score, reasons = MovePathfinder().score_move(
+        board,
+        {"muffin": "0 / 3"},
+        "donut",
+        path,
+        moves_left=10,
+    )
+
+    assert score >= 45.0
+    assert "guaranteed depth-2 target yield: +45.0" in reasons
+
+
 def test_best_move_uses_future_board_state_in_reasons():
     board = [["muffin", "muffin", "muffin"], ["red", "red", "red"]]
 
