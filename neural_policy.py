@@ -370,7 +370,7 @@ class PolicyTrainingDatasetBuilder:
         return features, labels, state_ids, best_rows, state_id_counter
 
     def build(self, games: int, seed_offset: int = 0) -> PolicyDataset:
-        cores = max(1, os.cpu_count() - 1) # Оставляем 1 ядро свободным
+        cores = os.cpu_count() # Забираем все доступные ядра
         print(f"Building dataset for {games} games using {cores} CPU cores...")
         
         all_features = []
