@@ -181,7 +181,8 @@ class NeuralMovePolicy:
             pred = self.model(x_standardized)
         return pred.cpu().numpy()
 
-    def fit(self, train: PolicyDataset, val: PolicyDataset, config: TrainingConfig, save_path: str = None):        print(f"[{'GPU' if self.device.type == 'cuda' else 'CPU'}] Starting PyTorch training...")
+    def fit(self, train: PolicyDataset, val: PolicyDataset, config: TrainingConfig, save_path: str = None):
+        print(f"[{'GPU' if self.device.type == 'cuda' else 'CPU'}] Starting PyTorch training...")
         
         # Move data to GPU
         x_train = torch.tensor(train.x, dtype=torch.float32, device=self.device)
