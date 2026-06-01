@@ -36,10 +36,28 @@ def parse_blends(raw: str) -> List[float]:
 
 def summarize(results):
     by_difficulty: Dict[str, Dict[str, float]] = {}
+    total_moves = 0
+    direct_target_moves = 0
+    off_target_moves = 0
+    short_off_target_moves = 0
+
     for result in results:
         bucket = by_difficulty.setdefault(result.difficulty, {"games": 0, "wins": 0})
         bucket["games"] += 1
         bucket["wins"] += int(result.success)
+
+        for turn in result.turns:
+            total_moves += 1
+            move = turn.get("move") or {}
+            collected = turn.get("collected") or {}
+            collected_targets = sum(int(value) for value in collected.values())
+            if collected_targets > 0:
+                direct_target_moves += 1
+            else:
+                off_target_moves += 1
+                if int(move.get("length", 0)) < 4:
+                    short_off_target_moves += 1
+
     for bucket in by_difficulty.values():
         bucket["successRate"] = round(bucket["wins"] / bucket["games"] * 100.0, 2) if bucket["games"] else 0.0
     wins = sum(1 for result in results if result.success)
@@ -49,6 +67,13 @@ def summarize(results):
         "losses": len(results) - wins,
         "successRate": round(wins / len(results) * 100.0, 2) if results else 0.0,
         "byDifficulty": by_difficulty,
+        "moveDiagnostics": {
+            "totalMoves": total_moves,
+            "directTargetMoves": direct_target_moves,
+            "offTargetMoves": off_target_moves,
+            "shortOffTargetMoves": short_off_target_moves,
+            "shortOffTargetRate": round(short_off_target_moves / total_moves * 100.0, 2) if total_moves else 0.0,
+        },
     }
 
 

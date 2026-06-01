@@ -1761,7 +1761,6 @@ class NeuralPolicyMoveSelector:
             self._move_to_policy_dict(move, policy_score, combined_score, self.blend_heuristic)
             for move, policy_score, combined_score in ranked[:top]
         ]
-
         enriched = dict(game_state)
         enriched["analysis"] = {
             "validChains": len(paths),

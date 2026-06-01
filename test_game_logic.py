@@ -511,3 +511,29 @@ def test_bot_ignores_completed_donuts_and_focuses_remaining_muffins():
 
     assert move.item == "muffin"
     assert any("target muffin" in reason for reason in move.reasons)
+
+
+
+def test_policy_behavior_audit_confirms_target_features_present():
+    from inspect_policy_behavior import summarize_model_features
+
+    audit = summarize_model_features("models/policy_network.json")
+
+    assert audit["featureListMatchesCode"] is True
+    assert "moves_left_norm" in audit["targetAndMoveBudgetFeaturesPresent"]
+    assert "own_target_urgency" in audit["nonConstantTargetAndMoveBudgetFeatures"]
+    assert "target_remaining_muffin" in audit["nonConstantTargetAndMoveBudgetFeatures"]
+
+
+def test_policy_behavior_audit_direct_target_yield_counts_item_and_ice():
+    from game_parser import MoveCandidate
+    from inspect_policy_behavior import direct_target_yield
+
+    pathfinder = MovePathfinder()
+    state = {
+        "gameState": {"targets": {"muffin": "0 / 2", "ice": "0 / 1"}},
+        "board": [["muffin_ice", "muffin", "donut"]],
+    }
+    move = MoveCandidate("muffin", ((0, 0), (0, 1)), 0.0, ())
+
+    assert direct_target_yield(pathfinder, state, move) == 3
