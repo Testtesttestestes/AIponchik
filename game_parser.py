@@ -10,7 +10,7 @@ import subprocess
 import shutil
 import time
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Dict, List, Tuple
 
 
 BoardPoint = Tuple[int, int]
@@ -63,6 +63,47 @@ class MoveCandidate:
             "reasons": list(self.reasons),
         }
 
+
+@dataclass(frozen=True)
+class SimulationConfig:
+    """Configuration for deterministic random game simulations."""
+
+    games: int = 50
+    seed: int = 20260601
+    rows: int = 7
+    cols: int = 7
+    ice_hits: int = 3
+    max_moves_fallback: int = 24
+
+
+@dataclass
+class SimulatedGameResult:
+    """Summary for one full simulated bot-played game."""
+
+    game_index: int
+    level: str
+    difficulty: str
+    success: bool
+    moves_used: int
+    moves_limit: int
+    targets_start: Dict[str, int]
+    targets_remaining: Dict[str, int]
+    turns: List[Dict]
+    errors: List[str]
+
+    def to_dict(self):
+        return {
+            "gameIndex": self.game_index,
+            "level": self.level,
+            "difficulty": self.difficulty,
+            "success": self.success,
+            "movesUsed": self.moves_used,
+            "movesLimit": self.moves_limit,
+            "targetsStart": self.targets_start,
+            "targetsRemaining": self.targets_remaining,
+            "turns": self.turns,
+            "errors": self.errors,
+        }
 
 class FutureBoardEvaluator:
     """Score the guaranteed board quality after a line-drawing move.
@@ -313,6 +354,8 @@ class MovePathfinder:
         counts_by_item = {}
 
         def dfs(item, row, col, visited, path):
+            if counts_by_item.get(item, 0) >= self.max_paths_per_item:
+                return
             if len(path) >= self.min_length:
                 key = (item, self._canonical_path(path))
                 if key not in seen:
@@ -487,6 +530,226 @@ class MovePathfinder:
         return 0, 0
 
 
+class RandomGameSimulator:
+    """Run the current move strategy against bootstrapped random boards.
+
+    Etalon JSON files provide realistic level targets, move budgets, token mix,
+    and iced-cell density.  During simulation, iced cells are tracked as an
+    overlay with configurable hit points; by default every iced block needs
+    three hits before the ice target is credited.
+    """
+
+    ITEMS = ("biscuit", "donut", "chocolate", "red", "muffin")
+    DIFFICULTIES = {
+        "easy": {"move_bonus": 4, "target_scale": 0.75, "ice_scale": 0.7},
+        "normal": {"move_bonus": 0, "target_scale": 1.0, "ice_scale": 1.0},
+        "hard": {"move_bonus": -3, "target_scale": 1.15, "ice_scale": 1.25},
+    }
+
+    def __init__(self, etalon_dir="etalon_images", config=None, pathfinder=None):
+        self.etalon_dir = etalon_dir
+        self.config = config or SimulationConfig()
+        self.pathfinder = pathfinder or MovePathfinder(max_paths_per_item=80)
+        self.rng = np.random.default_rng(self.config.seed)
+        self.etalon_states = self.load_etalon_states(etalon_dir)
+        self.item_probabilities = self._item_probabilities(self.etalon_states)
+
+    @staticmethod
+    def load_etalon_states(etalon_dir):
+        states = []
+        for path in sorted(glob.glob(os.path.join(etalon_dir, "*.json"))):
+            with open(path, "r", encoding="utf-8") as handle:
+                state = json.load(handle)
+            state["_source"] = path
+            states.append(state)
+        if not states:
+            raise RuntimeError(f"No etalon JSON files found in {etalon_dir}")
+        return states
+
+    @classmethod
+    def _base_item(cls, cell):
+        return MovePathfinder.base_item(cell)
+
+    @classmethod
+    def _item_probabilities(cls, states):
+        counts = {item: 1 for item in cls.ITEMS}
+        for state in states:
+            for row in state.get("board", []):
+                for cell in row:
+                    item = cls._base_item(cell)
+                    if item in counts:
+                        counts[item] += 1
+        total = float(sum(counts.values()))
+        return np.array([counts[item] / total for item in cls.ITEMS], dtype=float)
+
+    def run_many(self, games=None):
+        games = games or self.config.games
+        results = [self.run_one(index + 1) for index in range(games)]
+        wins = sum(1 for result in results if result.success)
+        by_difficulty = {}
+        for result in results:
+            bucket = by_difficulty.setdefault(result.difficulty, {"games": 0, "wins": 0})
+            bucket["games"] += 1
+            bucket["wins"] += int(result.success)
+        for bucket in by_difficulty.values():
+            bucket["successRate"] = round(bucket["wins"] / bucket["games"] * 100.0, 2) if bucket["games"] else 0.0
+        return {
+            "config": {
+                "games": games,
+                "seed": self.config.seed,
+                "etalonDir": self.etalon_dir,
+                "iceHits": self.config.ice_hits,
+            },
+            "summary": {
+                "games": games,
+                "wins": wins,
+                "losses": games - wins,
+                "successRate": round(wins / games * 100.0, 2) if games else 0.0,
+                "byDifficulty": by_difficulty,
+            },
+            "games": [result.to_dict() for result in results],
+        }
+
+    def run_one(self, game_index):
+        template = self.etalon_states[int(self.rng.integers(0, len(self.etalon_states)))]
+        difficulty = list(self.DIFFICULTIES)[(game_index - 1) % len(self.DIFFICULTIES)]
+        modifiers = self.DIFFICULTIES[difficulty]
+        level = str(template.get("gameState", {}).get("level", "0"))
+        moves_limit = self._moves_limit(template, modifiers)
+        targets_start = self._scaled_targets(template, modifiers)
+        targets_remaining = dict(targets_start)
+        board, ice_hp = self._random_board_from_template(template, modifiers)
+        turns = []
+        errors = []
+
+        for turn in range(1, moves_limit + 1):
+            if self._targets_done(targets_remaining):
+                break
+            state = self._state_for_solver(board, ice_hp, targets_remaining, moves_limit - turn + 1, level)
+            moves = self.pathfinder.best_moves(state, limit=1)
+            if not moves:
+                errors.append(f"turn {turn}: no valid chain")
+                board, ice_hp = self._force_reseed_playable_area(board, ice_hp)
+                continue
+            move = moves[0]
+            collected = self._apply_move(board, ice_hp, move.path, targets_remaining)
+            self._refill_board(board, ice_hp)
+            turns.append({
+                "turn": turn,
+                "move": move.to_dict(),
+                "collected": collected,
+                "targetsRemaining": dict(targets_remaining),
+            })
+
+        success = self._targets_done(targets_remaining)
+        return SimulatedGameResult(
+            game_index=game_index,
+            level=level,
+            difficulty=difficulty,
+            success=success,
+            moves_used=len(turns),
+            moves_limit=moves_limit,
+            targets_start=targets_start,
+            targets_remaining=targets_remaining,
+            turns=turns,
+            errors=errors,
+        )
+
+    def _moves_limit(self, template, modifiers):
+        raw = template.get("gameState", {}).get("movesLeft")
+        parsed = MovePathfinder._parse_moves_left(raw) or self.config.max_moves_fallback
+        return max(8, parsed + int(modifiers["move_bonus"]))
+
+    def _scaled_targets(self, template, modifiers):
+        targets = {}
+        for raw_name, raw_value in template.get("gameState", {}).get("targets", {}).items():
+            name = MovePathfinder.TARGET_ALIASES.get(str(raw_name), str(raw_name))
+            _, total = MovePathfinder._parse_target_progress(raw_value)
+            scale = modifiers["ice_scale"] if name == "ice" else modifiers["target_scale"]
+            targets[name] = max(1, int(round(total * scale)))
+        return targets
+
+    def _random_board_from_template(self, template, modifiers):
+        rows, cols = self.config.rows, self.config.cols
+        board = self.rng.choice(self.ITEMS, size=(rows, cols), p=self.item_probabilities).tolist()
+        iced_cells = sum(
+            1
+            for row in template.get("board", [])
+            for cell in row
+            if MovePathfinder.has_ice(cell)
+        )
+        ice_count = int(round(iced_cells * modifiers["ice_scale"]))
+        ice_count = max(0, min(rows * cols, ice_count))
+        ice_hp = [[0 for _ in range(cols)] for _ in range(rows)]
+        if ice_count:
+            positions = self.rng.choice(rows * cols, size=ice_count, replace=False)
+            for pos in positions:
+                row, col = divmod(int(pos), cols)
+                ice_hp[row][col] = self.config.ice_hits
+        return board, ice_hp
+
+    def _state_for_solver(self, board, ice_hp, targets_remaining, moves_left, level):
+        visible_board = []
+        for row_index, row in enumerate(board):
+            visible_row = []
+            for col_index, item in enumerate(row):
+                visible_row.append(f"{item}_ice" if ice_hp[row_index][col_index] > 0 else item)
+            visible_board.append(visible_row)
+        targets = {name: f"0 / {remaining}" for name, remaining in targets_remaining.items() if remaining > 0}
+        return {
+            "gameState": {"movesLeft": str(moves_left), "level": level, "targets": targets},
+            "board": visible_board,
+        }
+
+    @staticmethod
+    def _targets_done(targets_remaining):
+        return all(value <= 0 for value in targets_remaining.values())
+
+    def _apply_move(self, board, ice_hp, path, targets_remaining):
+        collected = {name: 0 for name in targets_remaining}
+        for row, col in path:
+            item = board[row][col]
+            if item in targets_remaining and targets_remaining[item] > 0:
+                targets_remaining[item] -= 1
+                collected[item] = collected.get(item, 0) + 1
+            if ice_hp[row][col] > 0:
+                ice_hp[row][col] -= 1
+                if ice_hp[row][col] == 0 and targets_remaining.get("ice", 0) > 0:
+                    targets_remaining["ice"] -= 1
+                    collected["ice"] = collected.get("ice", 0) + 1
+            board[row][col] = "EMPTY"
+        for name in list(targets_remaining):
+            targets_remaining[name] = max(0, targets_remaining[name])
+        return {name: count for name, count in collected.items() if count}
+
+    def _refill_board(self, board, ice_hp):
+        rows = len(board)
+        cols = len(board[0]) if rows else 0
+        for col in range(cols):
+            surviving_items = [
+                board[row][col]
+                for row in range(rows - 1, -1, -1)
+                if board[row][col] != "EMPTY"
+            ]
+            write = rows - 1
+            for item in surviving_items:
+                board[write][col] = item
+                write -= 1
+            while write >= 0:
+                board[write][col] = str(self.rng.choice(self.ITEMS, p=self.item_probabilities))
+                write -= 1
+
+    def _force_reseed_playable_area(self, board, ice_hp):
+        row = int(self.rng.integers(0, self.config.rows))
+        col = int(self.rng.integers(0, max(1, self.config.cols - 2)))
+        item = str(self.rng.choice(self.ITEMS, p=self.item_probabilities))
+        for offset in range(3):
+            board[row][col + offset] = item
+            ice_hp[row][col + offset] = 0
+        return board, ice_hp
+
+
+
 class AdbScreenReader:
     """Capture a connected Android screen and wait until the frame is stable."""
 
@@ -519,6 +782,46 @@ class AdbScreenReader:
             command.extend(["-s", self.serial])
         command.extend(args)
         return command
+
+    def run_shell(self, *args, timeout=10):
+        command = self._adb_command("shell", *map(str, args))
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                "ADB executable was not found. Install Android platform-tools, add adb.exe to PATH, "
+                "or pass --adb-path /path/to/adb.exe (or set AIPONCHIK_ADB for the bat script)."
+            ) from exc
+        if result.returncode != 0:
+            raise RuntimeError((result.stderr or result.stdout or "ADB shell command failed").strip())
+        return result
+
+    def swipe_points(self, points, duration_ms=120, pause=0.04):
+        """Experimentally draw a chain on the device with ADB swipe segments."""
+        self.ensure_device()
+        if len(points) < 2:
+            return 0
+        segments = 0
+        for start, end in zip(points, points[1:]):
+            self.run_shell(
+                "input", "swipe",
+                int(start[0]), int(start[1]), int(end[0]), int(end[1]),
+                int(duration_ms),
+                timeout=10,
+            )
+            segments += 1
+            if pause:
+                time.sleep(pause)
+        return segments
+
+    def play_move(self, parser, move, duration_ms=120):
+        """Convert a suggested board path to screen coordinates and perform it."""
+        if not move or not move.get("path"):
+            return 0
+        path = [(cell["row"], cell["col"]) if isinstance(cell, dict) else tuple(cell)
+                for cell in move.get("path", [])]
+        points = [parser.board_center(point) for point in path]
+        return self.swipe_points(points, duration_ms=duration_ms)
 
     def ensure_device(self):
         command = self._adb_command("get-state")
@@ -1162,6 +1465,15 @@ def parse_args():
     cli.add_argument("--window-ms", type=int, default=0,
                      help="Milliseconds to keep --show-overlay-window open; 0 waits for a key press.")
     cli.add_argument("--top", type=int, default=10, help="Number of suggested moves to include.")
+    cli.add_argument("--play-move", action="store_true",
+                     help="Experimental: after ADB analysis, draw the best move on the phone with input swipe segments.")
+    cli.add_argument("--swipe-duration-ms", type=int, default=120,
+                     help="Duration of each experimental ADB swipe segment for --play-move.")
+    cli.add_argument("--simulate", action="store_true",
+                     help="Run deterministic random full-game simulations instead of parsing screenshots.")
+    cli.add_argument("--simulate-games", type=int, default=50, help="Number of simulated games to run.")
+    cli.add_argument("--simulate-seed", type=int, default=20260601, help="Random seed for simulations.")
+    cli.add_argument("--etalon-dir", default="etalon_images", help="Directory with ideal etalon JSON files for simulations.")
     return cli.parse_args()
 
 
@@ -1216,6 +1528,9 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
     out_path = args.out or default_out
     gui = MoveAssistantGui(enabled=args.gui)
     last_signature = None
+    last_result = None
+    last_display_frame = None
+    last_board_signature = None
 
     def on_waiting_frame(frame, diff, stable_count):
         return gui.render(
@@ -1239,8 +1554,13 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
                 continue
 
             signature = cv2.resize(frame, (64, 128), interpolation=cv2.INTER_AREA).tobytes()
-            if signature == last_signature:
-                if args.gui and not gui.render(frame, "Экран стабилен, изменений нет; жду следующий кадр..."):
+            if signature == last_signature and last_display_frame is not None:
+                if args.gui and not gui.render(
+                    last_display_frame,
+                    "Экран стабилен, изменений нет; показываю последний рассчитанный ход...",
+                    result=last_result,
+                    stable_count=args.stable_frames,
+                ):
                     break
                 if not args.watch:
                     break
@@ -1252,11 +1572,23 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
             display_frame = frame
             status = "Поле не найдено на стабильном экране; жду следующее состояние..."
             if result:
-                if result.get("bestMove"):
-                    display_frame = parser.draw_move_overlay(frame, result["bestMove"], args.overlay)
-                    status = "Стабильный экран: лучший ход рассчитан"
+                board_signature = json.dumps(result.get("board", []), ensure_ascii=False, sort_keys=True)
+                if board_signature == last_board_signature and last_display_frame is not None:
+                    display_frame = last_display_frame
+                    status = "Поле не изменилось; не пересчитываю ход и оставляю прошлую подсказку"
+                    result = last_result
                 else:
-                    status = "Стабильный экран: ходов не найдено"
+                    last_board_signature = board_signature
+                    if result.get("bestMove"):
+                        display_frame = parser.draw_move_overlay(frame, result["bestMove"], args.overlay)
+                        status = "Стабильный экран: лучший ход рассчитан"
+                        if args.play_move and isinstance(reader, AdbScreenReader):
+                            segments = reader.play_move(parser, result["bestMove"], duration_ms=args.swipe_duration_ms)
+                            print(f"ADB: experimental move sent as {segments} swipe segment(s).")
+                    else:
+                        status = "Стабильный экран: ходов не найдено"
+                    last_result = result
+                    last_display_frame = display_frame
             if args.gui and not gui.render(display_frame, status, result=result, stable_count=args.stable_frames):
                 break
             if not args.watch and not args.gui:
@@ -1266,6 +1598,20 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
         print("Остановлено пользователем.")
     finally:
         gui.close()
+
+
+def run_simulation(args):
+    config = SimulationConfig(games=args.simulate_games, seed=args.simulate_seed)
+    simulator = RandomGameSimulator(etalon_dir=args.etalon_dir, config=config)
+    report = simulator.run_many(args.simulate_games)
+    out_path = args.out or os.path.join("run_outputs", "simulation_report.json")
+    write_json_result(report, out_path)
+    summary = report["summary"]
+    print(
+        f"Simulation complete: {summary['wins']}/{summary['games']} wins "
+        f"({summary['successRate']}%). Report: {out_path}"
+    )
+    return report
 
 
 def analyze_adb_screen(parser, args):
@@ -1279,7 +1625,11 @@ def analyze_adb_screen(parser, args):
         timeout=args.timeout,
     )
     out_path = args.out or os.path.join("test_images", "adb_capture.json")
-    return analyze_captured_frame(parser, frame, out_path, "adb", args)
+    result = analyze_captured_frame(parser, frame, out_path, "adb", args)
+    if args.play_move and result and result.get("bestMove"):
+        segments = reader.play_move(parser, result["bestMove"], duration_ms=args.swipe_duration_ms)
+        print(f"ADB: experimental move sent as {segments} swipe segment(s).")
+    return result
 
 
 def analyze_scrcpy_stream(parser, args):
@@ -1300,7 +1650,9 @@ if __name__ == "__main__":
     args = parse_args()
     parser = GameBoardParser()
 
-    if args.adb:
+    if args.simulate:
+        run_simulation(args)
+    elif args.adb:
         analyze_adb_screen(parser, args)
     elif args.stream:
         analyze_scrcpy_stream(parser, args)
