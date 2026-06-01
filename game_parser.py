@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import numpy as np
 import pytesseract
@@ -5,6 +6,270 @@ import json
 import os
 import glob
 import re
+import subprocess
+import time
+from dataclasses import dataclass
+from typing import Tuple
+
+
+BoardPoint = Tuple[int, int]
+BoardPath = Tuple[BoardPoint, ...]
+
+
+@dataclass(frozen=True)
+class MoveCandidate:
+    """A valid chain and its heuristic value for the current level state."""
+
+    item: str
+    path: BoardPath
+    score: float
+    reasons: Tuple[str, ...]
+
+    @property
+    def length(self):
+        return len(self.path)
+
+    def to_dict(self):
+        return {
+            "item": self.item,
+            "length": self.length,
+            "score": round(self.score, 2),
+            "path": [{"row": row, "col": col} for row, col in self.path],
+            "reasons": list(self.reasons),
+        }
+
+
+class MovePathfinder:
+    """Find all same-token chains on an 8-neighbour game board.
+
+    Iced tiles keep their playable base type (for example ``muffin_ice`` is a
+    muffin for path construction) while still being visible to the scorer as ice
+    targets.  The DFS enumerates simple paths only: a cell can appear at most
+    once in one candidate chain.
+    """
+
+    BLOCKED = {"", "EMPTY", "ERROR", "unknown", None}
+    TARGET_ALIASES = {
+        "biscuits": "biscuit",
+        "biscuit": "biscuit",
+        "brookie": "chocolate",
+        "chocolate": "chocolate",
+        "donuts": "donut",
+        "donut": "donut",
+        "muffins": "muffin",
+        "muffin": "muffin",
+        "red": "red",
+        "ice": "ice",
+    }
+
+    def __init__(self, min_length=3, max_paths_per_item=20000):
+        self.min_length = min_length
+        self.max_paths_per_item = max_paths_per_item
+
+    @staticmethod
+    def base_item(cell):
+        if cell in MovePathfinder.BLOCKED:
+            return None
+        if isinstance(cell, str) and cell.endswith("_ice"):
+            return cell[:-4]
+        return cell
+
+    @staticmethod
+    def has_ice(cell):
+        return isinstance(cell, str) and cell.endswith("_ice")
+
+    @staticmethod
+    def _canonical_path(path):
+        reverse = tuple(reversed(path))
+        return min(tuple(path), reverse)
+
+    @staticmethod
+    def _neighbors(row, col, rows, cols):
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                if dr == 0 and dc == 0:
+                    continue
+                nr, nc = row + dr, col + dc
+                if 0 <= nr < rows and 0 <= nc < cols:
+                    yield nr, nc
+
+    def find_paths(self, board):
+        rows = len(board)
+        cols = len(board[0]) if rows else 0
+        paths = []
+        seen = set()
+        counts_by_item = {}
+
+        def dfs(item, row, col, visited, path):
+            if len(path) >= self.min_length:
+                key = (item, self._canonical_path(path))
+                if key not in seen:
+                    seen.add(key)
+                    paths.append(tuple(path))
+                    counts_by_item[item] = counts_by_item.get(item, 0) + 1
+                    if counts_by_item[item] >= self.max_paths_per_item:
+                        return
+
+            for nr, nc in self._neighbors(row, col, rows, cols):
+                if (nr, nc) in visited:
+                    continue
+                if self.base_item(board[nr][nc]) != item:
+                    continue
+                visited.add((nr, nc))
+                path.append((nr, nc))
+                dfs(item, nr, nc, visited, path)
+                path.pop()
+                visited.remove((nr, nc))
+
+        for row in range(rows):
+            for col in range(cols):
+                item = self.base_item(board[row][col])
+                if item is None:
+                    continue
+                if counts_by_item.get(item, 0) >= self.max_paths_per_item:
+                    continue
+                dfs(item, row, col, {(row, col)}, [(row, col)])
+        return paths
+
+    def score_paths(self, board, targets, paths):
+        scored = []
+        for path in paths:
+            item = self.base_item(board[path[0][0]][path[0][1]])
+            score, reasons = self.score_path(board, targets, item, path)
+            scored.append(MoveCandidate(item=item, path=tuple(path), score=score, reasons=tuple(reasons)))
+        scored.sort(key=lambda move: (move.score, move.length), reverse=True)
+        return scored
+
+    def best_moves(self, game_state, limit=10):
+        board = game_state.get("board", [])
+        targets = game_state.get("gameState", {}).get("targets", {})
+        paths = self.find_paths(board)
+        return self.score_paths(board, targets, paths)[:limit]
+
+    def score_path(self, board, targets, item, path):
+        score = float(len(path))
+        reasons = [f"base length {len(path)}"]
+        normalized_targets = self._normalize_targets(targets)
+
+        target = normalized_targets.get(item)
+        completed_item_target = False
+        if target and target["remaining"] > 0:
+            useful = min(len(path), target["remaining"])
+            bonus = useful * 20.0
+            score += bonus
+            reasons.append(f"target {item}: +{bonus:.0f} for {useful} useful tile(s)")
+        elif target:
+            score = 0.0
+            completed_item_target = True
+            reasons.append(f"target {item} completed: item score is zero")
+
+        ice_count = sum(1 for row, col in path if self.has_ice(board[row][col]))
+        ice_target = normalized_targets.get("ice")
+        if ice_count and ice_target and ice_target["remaining"] > 0:
+            useful_ice = min(ice_count, ice_target["remaining"])
+            bonus = useful_ice * 15.0
+            score += bonus
+            reasons.append(f"ice target: +{bonus:.0f} for {useful_ice} iced tile(s)")
+
+        if not completed_item_target:
+            if len(path) >= 6:
+                score += 12.0
+                reasons.append("long chain bonus +12")
+            elif len(path) >= 4:
+                score += 5.0
+                reasons.append("medium chain bonus +5")
+        return score, reasons
+
+    def _normalize_targets(self, targets):
+        normalized = {}
+        for raw_name, raw_value in (targets or {}).items():
+            name = self.TARGET_ALIASES.get(str(raw_name), str(raw_name))
+            current, total = self._parse_target_progress(raw_value)
+            normalized[name] = {
+                "current": current,
+                "total": total,
+                "remaining": max(0, total - current),
+            }
+        return normalized
+
+    @staticmethod
+    def _parse_target_progress(value):
+        if isinstance(value, str):
+            match = re.search(r"(\d+)\s*/\s*(\d+)", value)
+            if match:
+                return int(match.group(1)), int(match.group(2))
+            if value.isdigit():
+                return 0, int(value)
+        if isinstance(value, dict):
+            current = int(value.get("current", value.get("done", 0)) or 0)
+            total = int(value.get("total", value.get("target", 0)) or 0)
+            return current, total
+        return 0, 0
+
+
+class AdbScreenReader:
+    """Capture a connected Android screen and wait until the frame is stable."""
+
+    def __init__(self, adb_path="adb", serial=None):
+        self.adb_path = adb_path
+        self.serial = serial
+
+    def _adb_command(self, *args):
+        command = [self.adb_path]
+        if self.serial:
+            command.extend(["-s", self.serial])
+        command.extend(args)
+        return command
+
+    def ensure_device(self):
+        command = self._adb_command("get-state")
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        if result.returncode != 0 or result.stdout.strip() != "device":
+            details = (result.stderr or result.stdout).strip()
+            raise RuntimeError(f"ADB device is not ready: {details or 'unknown state'}")
+
+    def capture_frame(self):
+        command = self._adb_command("exec-out", "screencap", "-p")
+        result = subprocess.run(command, capture_output=True, timeout=15)
+        if result.returncode != 0:
+            raise RuntimeError((result.stderr or b"ADB screencap failed").decode("utf-8", errors="ignore"))
+        data = np.frombuffer(result.stdout, dtype=np.uint8)
+        image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+        if image is None:
+            raise RuntimeError("ADB returned a screenshot that OpenCV could not decode")
+        return image
+
+    @staticmethod
+    def frame_difference(first, second):
+        if first.shape != second.shape:
+            return float("inf")
+        small_first = cv2.resize(first, (160, 320), interpolation=cv2.INTER_AREA)
+        small_second = cv2.resize(second, (160, 320), interpolation=cv2.INTER_AREA)
+        return float(np.mean(cv2.absdiff(small_first, small_second)))
+
+    def wait_for_stable_frame(self, stable_frames=3, threshold=1.5, interval=0.35, timeout=20):
+        self.ensure_device()
+        deadline = time.monotonic() + timeout
+        previous = None
+        stable_count = 0
+        last_frame = None
+        while time.monotonic() < deadline:
+            frame = self.capture_frame()
+            last_frame = frame
+            if previous is not None:
+                diff = self.frame_difference(previous, frame)
+                if diff <= threshold:
+                    stable_count += 1
+                    if stable_count >= stable_frames:
+                        print(f"GREEN LIGHT: screen is stable (diff={diff:.2f}).")
+                        return frame
+                else:
+                    stable_count = 0
+            previous = frame
+            time.sleep(interval)
+        if last_frame is None:
+            raise RuntimeError("Could not capture any frame from ADB")
+        raise TimeoutError("Screen did not become stable before timeout")
 
 
 class GameBoardParser:
@@ -267,14 +532,13 @@ class GameBoardParser:
             return "donut_ice"
         return best_label
 
-    def process_image(self, image_path):
-        img = cv2.imread(image_path)
+    def process_frame(self, img, debug_out_path=None, source_name="frame"):
         if img is None:
-            print(f"Не удалось загрузить: {image_path}")
+            print(f"Не удалось загрузить: {source_name}")
             return None
 
         if not self.detect_grid_automatically(img):
-            print(f"[{image_path}] Ошибка: Не удалось найти игровое поле автоматически.")
+            print(f"[{source_name}] Ошибка: Не удалось найти игровое поле автоматически.")
             return None
 
         debug_img = img.copy()
@@ -314,8 +578,8 @@ class GameBoardParser:
                 row_data.append(item_type)
             board.append(row_data)
 
-        debug_out_path = image_path.replace(".jpg", "_DEBUG.jpg")
-        cv2.imwrite(debug_out_path, debug_img)
+        if debug_out_path:
+            cv2.imwrite(debug_out_path, debug_img)
 
         game_state = {
             "gameState": {
@@ -327,23 +591,95 @@ class GameBoardParser:
         }
         return game_state
 
+    def process_image(self, image_path):
+        img = cv2.imread(image_path)
+        debug_out_path = image_path.replace(".jpg", "_DEBUG.jpg")
+        return self.process_frame(img, debug_out_path=debug_out_path, source_name=image_path)
+
+
+def analyze_state(game_state, top=10):
+    pathfinder = MovePathfinder()
+    board = game_state.get("board", [])
+    targets = game_state.get("gameState", {}).get("targets", {})
+    paths = pathfinder.find_paths(board)
+    moves = pathfinder.score_paths(board, targets, paths)[:top]
+    enriched = dict(game_state)
+    enriched["analysis"] = {
+        "validChains": len(paths),
+        "bestMoves": [move.to_dict() for move in moves],
+    }
+    enriched["bestMove"] = moves[0].to_dict() if moves else None
+    return enriched
+
+
+def write_json_result(result_json, out_path):
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result_json, f, indent=4, ensure_ascii=False)
+
+
+def parse_args():
+    cli = argparse.ArgumentParser(description="Parse Cookie Cats board screenshots and suggest the best chain.")
+    cli.add_argument("--image", help="Analyze a single local screenshot.")
+    cli.add_argument("--dir", default="test_images", help="Directory with .jpg screenshots for batch mode.")
+    cli.add_argument("--adb", action="store_true", help="Capture the current Android screen through ADB.")
+    cli.add_argument("--adb-path", default="adb", help="Path to adb executable.")
+    cli.add_argument("--serial", help="ADB device serial if multiple devices are connected.")
+    cli.add_argument("--stable-frames", type=int, default=3, help="Stable frame count required before analysis.")
+    cli.add_argument("--stable-threshold", type=float, default=1.5, help="Mean pixel diff threshold for stable screen detection.")
+    cli.add_argument("--timeout", type=float, default=20.0, help="Seconds to wait for a stable ADB screen.")
+    cli.add_argument("--out", help="Output JSON path for --image or --adb mode.")
+    cli.add_argument("--top", type=int, default=10, help="Number of suggested moves to include.")
+    return cli.parse_args()
+
+
+def analyze_image_file(parser, image_path, out_path=None, top=10):
+    print(f"Анализ: {image_path} ...", end=" ")
+    result_json = parser.process_image(image_path)
+    if not result_json:
+        print("Ошибка")
+        return None
+    result_json = analyze_state(result_json, top=top)
+    out_path = out_path or image_path.replace(".jpg", ".json")
+    write_json_result(result_json, out_path)
+    best = result_json.get("bestMove")
+    best_text = f" лучший ход: {best['item']} x{best['length']} score={best['score']}" if best else " ходов не найдено"
+    print(f"Готово! Сохранено в {out_path};{best_text}")
+    return result_json
+
+
+def analyze_adb_screen(parser, args):
+    print("ADB: подключаюсь к устройству и жду стабильности экрана...")
+    reader = AdbScreenReader(adb_path=args.adb_path, serial=args.serial)
+    frame = reader.wait_for_stable_frame(
+        stable_frames=args.stable_frames,
+        threshold=args.stable_threshold,
+        timeout=args.timeout,
+    )
+    out_path = args.out or os.path.join("test_images", "adb_capture.json")
+    debug_path = out_path.rsplit(".", 1)[0] + "_DEBUG.jpg"
+    result_json = parser.process_frame(frame, debug_out_path=debug_path, source_name="adb")
+    if not result_json:
+        raise RuntimeError("ADB frame was stable, but board parsing failed")
+    result_json = analyze_state(result_json, top=args.top)
+    write_json_result(result_json, out_path)
+    print(f"Готово! Сохранено в {out_path}; debug={debug_path}")
+    if result_json.get("bestMove"):
+        print(json.dumps(result_json["bestMove"], ensure_ascii=False, indent=2))
+    return result_json
+
 
 if __name__ == "__main__":
+    args = parse_args()
     parser = GameBoardParser()
-    images = glob.glob(os.path.join("test_images", "*.jpg"))
 
-    if not images:
-        print("В папке test_images не найдено файлов .jpg!")
-
-    for img_path in images:
-        if "_DEBUG.jpg" in img_path:
-            continue
-
-        print(f"Анализ: {img_path} ...", end=" ")
-        result_json = parser.process_image(img_path)
-
-        if result_json:
-            out_path = img_path.replace(".jpg", ".json")
-            with open(out_path, "w", encoding="utf-8") as f:
-                json.dump(result_json, f, indent=4, ensure_ascii=False)
-            print(f"Готово! Сохранено в {out_path}")
+    if args.adb:
+        analyze_adb_screen(parser, args)
+    elif args.image:
+        analyze_image_file(parser, args.image, out_path=args.out, top=args.top)
+    else:
+        images = glob.glob(os.path.join(args.dir, "*.jpg"))
+        images = [img_path for img_path in images if "_DEBUG.jpg" not in img_path]
+        if not images:
+            print(f"В папке {args.dir} не найдено файлов .jpg!")
+        for img_path in images:
+            analyze_image_file(parser, img_path, top=args.top)
