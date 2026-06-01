@@ -7,6 +7,7 @@ import os
 import glob
 import re
 import subprocess
+import shutil
 import time
 from dataclasses import dataclass
 from typing import Tuple
@@ -436,8 +437,27 @@ class AdbScreenReader:
     """Capture a connected Android screen and wait until the frame is stable."""
 
     def __init__(self, adb_path="adb", serial=None):
-        self.adb_path = adb_path
+        self.adb_path = self.resolve_adb_path(adb_path)
         self.serial = serial
+
+    @staticmethod
+    def resolve_adb_path(adb_path="adb"):
+        """Return an executable ADB path or keep the requested value for errors."""
+        if adb_path and (os.path.isabs(adb_path) or os.path.dirname(adb_path)):
+            return adb_path
+        found = shutil.which(adb_path or "adb")
+        if found:
+            return found
+        for env_name in ("ANDROID_HOME", "ANDROID_SDK_ROOT", "LOCALAPPDATA"):
+            base = os.environ.get(env_name)
+            if not base:
+                continue
+            candidates = [os.path.join(base, "platform-tools", "adb.exe"),
+                          os.path.join(base, "Android", "Sdk", "platform-tools", "adb.exe")]
+            for candidate in candidates:
+                if os.path.exists(candidate):
+                    return candidate
+        return adb_path or "adb"
 
     def _adb_command(self, *args):
         command = [self.adb_path]
@@ -448,14 +468,26 @@ class AdbScreenReader:
 
     def ensure_device(self):
         command = self._adb_command("get-state")
-        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                "ADB executable was not found. Install Android platform-tools, add adb.exe to PATH, "
+                "or pass --adb-path /path/to/adb.exe (or set AIPONCHIK_ADB for the bat script)."
+            ) from exc
         if result.returncode != 0 or result.stdout.strip() != "device":
             details = (result.stderr or result.stdout).strip()
             raise RuntimeError(f"ADB device is not ready: {details or 'unknown state'}")
 
     def capture_frame(self):
         command = self._adb_command("exec-out", "screencap", "-p")
-        result = subprocess.run(command, capture_output=True, timeout=15)
+        try:
+            result = subprocess.run(command, capture_output=True, timeout=15)
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                "ADB executable was not found. Install Android platform-tools, add adb.exe to PATH, "
+                "or pass --adb-path /path/to/adb.exe (or set AIPONCHIK_ADB for the bat script)."
+            ) from exc
         if result.returncode != 0:
             raise RuntimeError((result.stderr or b"ADB screencap failed").decode("utf-8", errors="ignore"))
         data = np.frombuffer(result.stdout, dtype=np.uint8)
@@ -953,6 +985,40 @@ def write_json_result(result_json, out_path):
         json.dump(result_json, f, indent=4, ensure_ascii=False)
 
 
+def show_overlay_window(image, title="AIponchik move overlay", wait_ms=0):
+    """Show the calculated move in a foreground OpenCV window.
+
+    ADB itself has no drawable phone window, so this is a separate topmost
+    helper window that can be placed over/near a scrcpy mirror.
+    """
+    if image is None:
+        return
+    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    h, w = image.shape[:2]
+    max_h = 1200
+    scale = min(1.0, max_h / float(h)) if h else 1.0
+    cv2.resizeWindow(title, max(1, int(w * scale)), max(1, int(h * scale)))
+    try:
+        cv2.setWindowProperty(title, cv2.WND_PROP_TOPMOST, 1)
+    except cv2.error:
+        pass
+    cv2.imshow(title, image)
+    if wait_ms == 0:
+        print("Overlay window is open. Press any key in that window, or close the window, to continue.")
+        while True:
+            key = cv2.waitKey(100)
+            if key != -1:
+                break
+            try:
+                if cv2.getWindowProperty(title, cv2.WND_PROP_VISIBLE) < 1:
+                    return
+            except cv2.error:
+                return
+    else:
+        cv2.waitKey(wait_ms)
+    cv2.destroyWindow(title)
+
+
 def parse_args():
     cli = argparse.ArgumentParser(description="Parse Cookie Cats board screenshots and suggest the best chain.")
     cli.add_argument("--image", help="Analyze a single local screenshot.")
@@ -966,11 +1032,15 @@ def parse_args():
     cli.add_argument("--timeout", type=float, default=20.0, help="Seconds to wait for a stable ADB screen.")
     cli.add_argument("--out", help="Output JSON path for --image, --adb, or --stream mode.")
     cli.add_argument("--overlay", help="Output image path with the best calculated move drawn over the screen.")
+    cli.add_argument("--show-overlay-window", action="store_true",
+                     help="Show the calculated move in a topmost OpenCV window after saving it.")
+    cli.add_argument("--window-ms", type=int, default=0,
+                     help="Milliseconds to keep --show-overlay-window open; 0 waits for a key press.")
     cli.add_argument("--top", type=int, default=10, help="Number of suggested moves to include.")
     return cli.parse_args()
 
 
-def analyze_image_file(parser, image_path, out_path=None, top=10, overlay_path=None):
+def analyze_image_file(parser, image_path, out_path=None, top=10, overlay_path=None, show_window=False, window_ms=0):
     print(f"Анализ: {image_path} ...", end=" ")
     frame = cv2.imread(image_path)
     debug_out_path = image_path.replace(".jpg", "_DEBUG.jpg")
@@ -981,8 +1051,14 @@ def analyze_image_file(parser, image_path, out_path=None, top=10, overlay_path=N
     result_json = analyze_state(result_json, top=top)
     out_path = out_path or image_path.replace(".jpg", ".json")
     write_json_result(result_json, out_path)
-    if overlay_path and result_json.get("bestMove"):
-        parser.draw_move_overlay(frame, result_json["bestMove"], overlay_path)
+    overlay_img = None
+    if result_json.get("bestMove"):
+        if overlay_path:
+            overlay_img = parser.draw_move_overlay(frame, result_json["bestMove"], overlay_path)
+        elif show_window:
+            overlay_img = parser.draw_move_overlay(frame, result_json["bestMove"])
+    if show_window and overlay_img is not None:
+        show_overlay_window(overlay_img, wait_ms=window_ms)
     best = result_json.get("bestMove")
     best_text = f" лучший ход: {best['item']} x{best['length']} score={best['score']}" if best else " ходов не найдено"
     overlay_text = f"; overlay={overlay_path}" if overlay_path else ""
@@ -998,9 +1074,12 @@ def analyze_captured_frame(parser, frame, out_path, debug_label, args):
     result_json = analyze_state(result_json, top=args.top)
     write_json_result(result_json, out_path)
     overlay_path = args.overlay or out_path.rsplit(".", 1)[0] + "_MOVE.jpg"
+    overlay_img = None
     if result_json.get("bestMove"):
-        parser.draw_move_overlay(frame, result_json["bestMove"], overlay_path)
+        overlay_img = parser.draw_move_overlay(frame, result_json["bestMove"], overlay_path)
     print(f"Готово! Сохранено в {out_path}; debug={debug_path}; overlay={overlay_path}")
+    if args.show_overlay_window and overlay_img is not None:
+        show_overlay_window(overlay_img, wait_ms=args.window_ms)
     if result_json.get("bestMove"):
         print(json.dumps(result_json["bestMove"], ensure_ascii=False, indent=2))
     return result_json
@@ -1039,7 +1118,15 @@ if __name__ == "__main__":
     elif args.stream:
         analyze_scrcpy_stream(parser, args)
     elif args.image:
-        analyze_image_file(parser, args.image, out_path=args.out, top=args.top, overlay_path=args.overlay)
+        analyze_image_file(
+            parser,
+            args.image,
+            out_path=args.out,
+            top=args.top,
+            overlay_path=args.overlay,
+            show_window=args.show_overlay_window,
+            window_ms=args.window_ms,
+        )
     else:
         images = glob.glob(os.path.join(args.dir, "*.jpg"))
         images = [img_path for img_path in images if "_DEBUG.jpg" not in img_path]

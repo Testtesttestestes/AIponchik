@@ -33,11 +33,18 @@ scripts\start_scrcpy_high_quality.bat 48M h264
    scripts\get_move_adb.bat
    ```
 
-3. Скрипт сохранит и откроет картинку `run_outputs\adb_MOVE.jpg` с нарисованной цепочкой лучшего хода. Также будут созданы:
+3. Скрипт сохранит картинку `run_outputs\adb_MOVE.jpg` и сразу покажет её в отдельном topmost-окне OpenCV. Это не настоящий слой внутри ADB: у ADB нет окна с изображением телефона. Практически это работает как «оверлей-подсказка» — окно можно положить поверх/рядом с scrcpy, а после просмотра закрыть любой клавишей в окне overlay. Также будут созданы:
 
    * `run_outputs\adb_capture.json` — распознанное состояние и список лучших ходов.
    * `run_outputs\adb_capture_DEBUG.jpg` — отладочная разметка распознанных клеток.
    * `run_outputs\adb_MOVE.jpg` — скриншот с рассчитанным ходом.
+
+Если скрипт пишет, что не найден `adb.exe`, установите Android platform-tools или задайте путь вручную:
+
+```bat
+set AIPONCHIK_ADB=C:\Android\platform-tools\adb.exe
+scripts\get_move_adb.bat
+```
 
 Если подключено несколько устройств, задайте серийник перед запуском:
 
@@ -75,9 +82,9 @@ python game_parser.py --stream /dev/video2 --out run_outputs/live.json --overlay
 Если не нужны bat-скрипты, можно запустить Python-команду напрямую:
 
 ```bash
-python game_parser.py --adb --out run_outputs/adb_capture.json --overlay run_outputs/adb_MOVE.jpg
+python game_parser.py --adb --out run_outputs/adb_capture.json --overlay run_outputs/adb_MOVE.jpg --show-overlay-window
 ```
 
-Этот режим ничего не нажимает на телефоне: используется только `adb exec-out screencap -p` для чтения изображения.
+Этот режим ничего не нажимает на телефоне: используется только `adb exec-out screencap -p` для чтения изображения. Если `adb.exe` не в `PATH`, добавьте `--adb-path C:\Android\platform-tools\adb.exe`.
 
 В консоли будет напечатан лучший ход, а в JSON в поле `bestMove.path` будет путь по клеткам `row`/`col`.

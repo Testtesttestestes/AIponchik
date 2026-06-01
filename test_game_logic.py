@@ -163,3 +163,11 @@ def test_write_json_result_creates_parent_directory(tmp_path):
     write_json_result({"bestMove": None}, str(out_path))
 
     assert json.loads(out_path.read_text()) == {"bestMove": None}
+
+
+def test_explicit_adb_path_is_preserved():
+    from game_parser import AdbScreenReader
+
+    explicit = r"C:\Android\platform-tools\adb.exe"
+
+    assert AdbScreenReader.resolve_adb_path(explicit) == explicit
