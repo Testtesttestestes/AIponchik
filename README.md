@@ -63,6 +63,34 @@ scripts\start_scrcpy_high_quality.bat 48M h265
 scripts\start_scrcpy_high_quality.bat 48M h264
 ```
 
+## Парсер с нейронкой
+
+После обучения можно запускать отдельный входной скрипт `neural_game_parser.py`. Он принимает те же основные режимы, что и `game_parser.py` (`--image`, `--adb`, `--stream`, `--gui`, `--watch`, `--overlay`, `--out`), но ранжирует ход обученной моделью из `models/policy_network.json`. По умолчанию нейронке передаются 32 лучших кандидата на ход:
+
+```bash
+python neural_game_parser.py --image test_images/Screenshot_2026-06-01-13-30-11-51.jpg --out run_outputs/neural_check.json --overlay run_outputs/neural_check_MOVE.jpg
+```
+
+Для ADB-подсказки используется тот же безопасный режим чтения скриншота без нажатий:
+
+```bash
+python neural_game_parser.py --adb --out run_outputs/neural_adb.json --overlay run_outputs/neural_adb_MOVE.jpg --show-overlay-window
+```
+
+А для постоянного GUI-окна, аналогичного `scripts\run_adb_gui.bat`, запускайте:
+
+```bat
+scripts\run_adb_gui_neural.bat
+```
+
+Если модель лежит в другом месте или нужно изменить число кандидатов, задайте параметры явно:
+
+```bash
+python neural_game_parser.py --policy-model models/policy_network.json --policy-candidates 32 --image test_images/Screenshot_2026-06-01-13-30-11-51.jpg
+```
+
+В JSON-поле `analysis.ranker` будет `neuralPolicy`, `analysis.policyCandidateLimit` покажет лимит 32, а у ходов появятся `policyScore` и исходный `heuristicScore`.
+
 ## Быстро получить ход на Windows
 
 1. Откройте игру на телефоне и оставьте поле неподвижным.
