@@ -1,71 +1,516 @@
 {
     "gameState": {
-        "movesLeft": "0",
-        "level": "0"
+        "movesLeft": "14",
+        "level": "16",
+        "targets": {
+            "muffin": "12 / 26",
+            "biscuit": "13 / 27",
+            "ice": "4 / 5"
+        }
     },
     "board": [
         [
+            "red",
+            "red",
+            "chocolate",
+            "biscuit",
+            "chocolate",
+            "chocolate",
+            "biscuit"
+        ],
+        [
+            "chocolate",
+            "muffin",
+            "biscuit",
+            "muffin",
+            "muffin",
+            "muffin",
+            "chocolate"
+        ],
+        [
+            "donut",
+            "EMPTY",
+            "donut",
+            "donut",
+            "red",
+            "EMPTY",
+            "biscuit"
+        ],
+        [
+            "chocolate",
+            "biscuit",
+            "muffin",
+            "muffin",
+            "red",
+            "donut",
+            "biscuit"
+        ],
+        [
+            "biscuit",
+            "chocolate",
+            "muffin",
+            "donut",
+            "muffin",
+            "biscuit",
+            "muffin"
+        ],
+        [
+            "muffin",
+            "donut",
+            "donut",
             "muffin_ice",
             "EMPTY",
+            "chocolate",
+            "biscuit"
+        ],
+        [
             "muffin",
-            "donut_ice",
-            "donut_ice",
-            "EMPTY",
-            "muffin_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "muffin",
-            "EMPTY",
-            "muffin",
-            "muffin",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "muffin",
-            "EMPTY",
-            "EMPTY",
             "biscuit",
-            "EMPTY"
+            "muffin",
+            "chocolate",
+            "muffin",
+            "chocolate",
+            "red"
         ]
-    ]
+    ],
+    "analysis": {
+        "validChains": 59,
+        "bestMoves": [
+            {
+                "item": "muffin",
+                "length": 6,
+                "score": 74.53,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 153.00 + 0.35*future -224.20",
+                    "base length 6",
+                    "target muffin: +120 for 6 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 2.60",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 6,
+                "score": 74.53,
+                "path": [
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 153.00 + 0.35*future -224.20",
+                    "base length 6",
+                    "target muffin: +120 for 6 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 2.60",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 6,
+                "score": 74.53,
+                "path": [
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 153.00 + 0.35*future -224.20",
+                    "base length 6",
+                    "target muffin: +120 for 6 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 2.60",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 6,
+                "score": 68.77,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 153.00 + 0.35*future -240.65",
+                    "base length 6",
+                    "target muffin: +120 for 6 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.45",
+                    "future orphans: -31",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 6,
+                "score": 68.77,
+                "path": [
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 153.00 + 0.35*future -240.65",
+                    "base length 6",
+                    "target muffin: +120 for 6 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.45",
+                    "future orphans: -31",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 6,
+                "score": 68.77,
+                "path": [
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 153.00 + 0.35*future -240.65",
+                    "base length 6",
+                    "target muffin: +120 for 6 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.45",
+                    "future orphans: -31",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 5,
+                "score": 43.74,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
+                    "base length 5",
+                    "target muffin: +100 for 5 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "medium chain bonus +5",
+                    "future clusters: 22 group(s), weighted avg 2.61",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 5,
+                "score": 43.74,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
+                    "base length 5",
+                    "target muffin: +100 for 5 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "medium chain bonus +5",
+                    "future clusters: 21 group(s), weighted avg 2.61",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 5,
+                "score": 43.74,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
+                    "base length 5",
+                    "target muffin: +100 for 5 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "medium chain bonus +5",
+                    "future clusters: 22 group(s), weighted avg 2.61",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 5,
+                "score": 43.74,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
+                    "base length 5",
+                    "target muffin: +100 for 5 useful tile(s)",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "medium chain bonus +5",
+                    "future clusters: 22 group(s), weighted avg 2.61",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            }
+        ]
+    },
+    "bestMove": {
+        "item": "muffin",
+        "length": 6,
+        "score": 74.53,
+        "path": [
+            {
+                "row": 3,
+                "col": 2
+            },
+            {
+                "row": 4,
+                "col": 2
+            },
+            {
+                "row": 3,
+                "col": 3
+            },
+            {
+                "row": 4,
+                "col": 4
+            },
+            {
+                "row": 5,
+                "col": 3
+            },
+            {
+                "row": 6,
+                "col": 2
+            }
+        ],
+        "reasons": [
+            "utility 1.00*immediate 153.00 + 0.35*future -224.20",
+            "base length 6",
+            "target muffin: +120 for 6 useful tile(s)",
+            "ice target: +15 for 1 iced tile(s)",
+            "long chain bonus +12",
+            "future clusters: 21 group(s), weighted avg 2.60",
+            "future orphans: -29",
+            "future ice targets: +0.0"
+        ]
+    }
 }

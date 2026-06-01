@@ -1,71 +1,576 @@
 {
     "gameState": {
-        "movesLeft": "0",
-        "level": "0"
+        "movesLeft": "24",
+        "level": "17",
+        "targets": {
+            "muffin": "0 / 27",
+            "biscuit": "0 / 26"
+        }
     },
     "board": [
         [
-            "muffin_ice",
-            "EMPTY",
-            "muffin_ice",
-            "donut_ice",
-            "donut_ice",
-            "EMPTY",
-            "donut_ice"
+            "muffin",
+            "red",
+            "red",
+            "chocolate",
+            "red",
+            "biscuit",
+            "red"
         ],
         [
-            "EMPTY",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
+            "biscuit",
+            "red",
+            "chocolate",
             "muffin",
             "muffin",
-            "muffin",
-            "EMPTY"
+            "biscuit",
+            "muffin"
         ],
         [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
             "muffin",
-            "EMPTY",
+            "biscuit",
+            "biscuit",
+            "chocolate",
             "muffin",
-            "EMPTY"
+            "red",
+            "red"
+        ],
+        [
+            "donut",
+            "muffin",
+            "biscuit",
+            "donut",
+            "biscuit",
+            "chocolate",
+            "chocolate"
+        ],
+        [
+            "muffin",
+            "red",
+            "muffin",
+            "biscuit",
+            "biscuit",
+            "donut",
+            "muffin"
+        ],
+        [
+            "donut",
+            "red",
+            "red",
+            "biscuit",
+            "muffin",
+            "donut",
+            "biscuit"
+        ],
+        [
+            "donut",
+            "muffin",
+            "red",
+            "muffin",
+            "red",
+            "chocolate",
+            "biscuit"
         ]
-    ]
+    ],
+    "analysis": {
+        "validChains": 114,
+        "bestMoves": [
+            {
+                "item": "biscuit",
+                "length": 8,
+                "score": 114.38,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 180.00 + 0.35*future -187.49",
+                    "base length 8",
+                    "target biscuit: +160 for 8 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 18 group(s), weighted avg 4.17",
+                    "future orphans: -25",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 8,
+                "score": 114.38,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 180.00 + 0.35*future -187.49",
+                    "base length 8",
+                    "target biscuit: +160 for 8 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 18 group(s), weighted avg 4.17",
+                    "future orphans: -25",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 87.6,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -204.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 4.00",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 87.6,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -204.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 4.00",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 87.25,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 3.67",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 87.25,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 3.67",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 87.25,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 3.67",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 87.25,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 3.67",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 86.9,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -206.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 3.33",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 86.9,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 159.00 + 0.35*future -206.00",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 3.33",
+                    "future orphans: -27",
+                    "future ice targets: +0.0"
+                ]
+            }
+        ]
+    },
+    "bestMove": {
+        "item": "biscuit",
+        "length": 8,
+        "score": 114.38,
+        "path": [
+            {
+                "row": 1,
+                "col": 0
+            },
+            {
+                "row": 2,
+                "col": 1
+            },
+            {
+                "row": 2,
+                "col": 2
+            },
+            {
+                "row": 3,
+                "col": 2
+            },
+            {
+                "row": 4,
+                "col": 3
+            },
+            {
+                "row": 3,
+                "col": 4
+            },
+            {
+                "row": 4,
+                "col": 4
+            },
+            {
+                "row": 5,
+                "col": 3
+            }
+        ],
+        "reasons": [
+            "utility 1.00*immediate 180.00 + 0.35*future -187.49",
+            "base length 8",
+            "target biscuit: +160 for 8 useful tile(s)",
+            "long chain bonus +12",
+            "future clusters: 18 group(s), weighted avg 4.17",
+            "future orphans: -25",
+            "future ice targets: +0.0"
+        ]
+    }
 }

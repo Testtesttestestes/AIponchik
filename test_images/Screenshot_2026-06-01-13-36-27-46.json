@@ -1,71 +1,75 @@
 {
     "gameState": {
-        "movesLeft": "0",
-        "level": "0"
+        "movesLeft": "23",
+        "level": "19",
+        "targets": {
+            "donut": "0 / 26",
+            "biscuits": "8 / 27"
+        }
     },
     "board": [
         [
-            "muffin_ice",
-            "EMPTY",
-            "muffin_ice",
-            "donut_ice",
-            "donut_ice",
-            "EMPTY",
-            "muffin_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "muffin_ice",
+            "donut",
             "muffin",
-            "muffin",
-            "EMPTY"
+            "biscuit",
+            "donut",
+            "chocolate",
+            "red",
+            "red"
         ],
         [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "chocolate_ice",
-            "unknown",
-            "unknown",
-            "EMPTY"
+            "red",
+            "donut",
+            "chocolate",
+            "muffin",
+            "chocolate",
+            "donut",
+            "chocolate"
+        ],
+        [
+            "chocolate",
+            "donut",
+            "biscuit",
+            "biscuit",
+            "biscuit",
+            "chocolate",
+            "red"
+        ],
+        [
+            "biscuit",
+            "donut",
+            "biscuit",
+            "donut",
+            "chocolate",
+            "donut",
+            "muffin"
+        ],
+        [
+            "muffin",
+            "red",
+            "donut",
+            "donut",
+            "chocolate",
+            "biscuit",
+            "chocolate"
+        ],
+        [
+            "red",
+            "donut",
+            "chocolate",
+            "biscuit",
+            "donut",
+            "biscuit",
+            "donut"
+        ],
+        [
+            "biscuit",
+            "donut",
+            "muffin",
+            "biscuit",
+            "biscuit",
+            "chocolate",
+            "donut"
         ]
     ]
 }

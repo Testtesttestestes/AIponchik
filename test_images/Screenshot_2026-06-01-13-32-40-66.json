@@ -1,71 +1,645 @@
 {
     "gameState": {
-        "movesLeft": "0",
-        "level": "0"
+        "movesLeft": "22",
+        "level": "17",
+        "targets": {
+            "muffin": "9 / 27",
+            "biscuit": "8 / 26"
+        }
     },
     "board": [
         [
-            "muffin_ice",
-            "EMPTY",
-            "muffin_ice",
-            "donut_ice",
-            "donut_ice",
-            "EMPTY",
-            "donut_ice"
+            "chocolate",
+            "donut",
+            "chocolate",
+            "biscuit",
+            "red",
+            "biscuit",
+            "red"
         ],
         [
-            "EMPTY",
-            "EMPTY",
-            "muffin_ice",
-            "donut_ice",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
             "muffin",
+            "chocolate",
+            "biscuit",
+            "red",
             "muffin",
-            "muffin",
-            "EMPTY"
+            "biscuit",
+            "muffin"
         ],
         [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
+            "donut",
+            "red",
             "muffin",
-            "EMPTY",
+            "red",
+            "donut",
+            "red",
+            "red"
+        ],
+        [
+            "donut",
+            "red",
+            "red",
+            "biscuit",
+            "red",
+            "chocolate",
+            "chocolate"
+        ],
+        [
             "muffin",
-            "EMPTY"
+            "red",
+            "chocolate",
+            "chocolate",
+            "biscuit",
+            "donut",
+            "muffin"
+        ],
+        [
+            "donut",
+            "red",
+            "red",
+            "chocolate",
+            "red",
+            "donut",
+            "biscuit"
+        ],
+        [
+            "donut",
+            "muffin",
+            "red",
+            "donut",
+            "red",
+            "chocolate",
+            "biscuit"
         ]
-    ]
+    ],
+    "analysis": {
+        "validChains": 381,
+        "bestMoves": [
+            {
+                "item": "red",
+                "length": 11,
+                "score": -58.18,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    },
+                    {
+                        "row": 5,
+                        "col": 2
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 23.00 + 0.35*future -231.95",
+                    "base length 11",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 2.68",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 11,
+                "score": -58.18,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 23.00 + 0.35*future -231.95",
+                    "base length 11",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 2.68",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 11,
+                "score": -58.18,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    },
+                    {
+                        "row": 5,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 23.00 + 0.35*future -231.95",
+                    "base length 11",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 2.68",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 11,
+                "score": -58.18,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    },
+                    {
+                        "row": 5,
+                        "col": 2
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 23.00 + 0.35*future -231.95",
+                    "base length 11",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 2.68",
+                    "future orphans: -30",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 8,
+                "score": -58.77,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 2,
+                        "col": 6
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 20.00 + 0.35*future -225.05",
+                    "base length 8",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.32",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 8,
+                "score": -58.77,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 20.00 + 0.35*future -225.05",
+                    "base length 8",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.32",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 8,
+                "score": -58.77,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 20.00 + 0.35*future -225.05",
+                    "base length 8",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.32",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 7,
+                "score": -59.65,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 2,
+                        "col": 6
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 19.00 + 0.35*future -224.71",
+                    "base length 7",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.43",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 7,
+                "score": -59.65,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 19.00 + 0.35*future -224.71",
+                    "base length 7",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.43",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 7,
+                "score": -59.65,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility 1.00*immediate 19.00 + 0.35*future -224.71",
+                    "base length 7",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 2.43",
+                    "future orphans: -29",
+                    "future ice targets: +0.0"
+                ]
+            }
+        ]
+    },
+    "bestMove": {
+        "item": "red",
+        "length": 11,
+        "score": -58.18,
+        "path": [
+            {
+                "row": 2,
+                "col": 6
+            },
+            {
+                "row": 2,
+                "col": 5
+            },
+            {
+                "row": 3,
+                "col": 4
+            },
+            {
+                "row": 2,
+                "col": 3
+            },
+            {
+                "row": 3,
+                "col": 2
+            },
+            {
+                "row": 2,
+                "col": 1
+            },
+            {
+                "row": 3,
+                "col": 1
+            },
+            {
+                "row": 4,
+                "col": 1
+            },
+            {
+                "row": 5,
+                "col": 1
+            },
+            {
+                "row": 5,
+                "col": 2
+            },
+            {
+                "row": 6,
+                "col": 2
+            }
+        ],
+        "reasons": [
+            "utility 1.00*immediate 23.00 + 0.35*future -231.95",
+            "base length 11",
+            "long chain bonus +12",
+            "future clusters: 20 group(s), weighted avg 2.68",
+            "future orphans: -30",
+            "future ice targets: +0.0"
+        ]
+    }
 }

@@ -1,71 +1,76 @@
 {
     "gameState": {
-        "movesLeft": "0",
-        "level": "0"
+        "movesLeft": "18",
+        "level": "18",
+        "targets": {
+            "biscuits": "20 / 24",
+            "brookie": "14 / 25",
+            "ice": "0 / 7"
+        }
     },
     "board": [
         [
-            "muffin_ice",
-            "EMPTY",
-            "muffin_ice",
-            "donut_ice",
-            "donut_ice",
-            "chocolate_ice",
-            "chocolate_ice"
+            "red",
+            "red",
+            "red",
+            "red",
+            "red",
+            "donut",
+            "muffin"
         ],
         [
-            "chocolate_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice"
+            "chocolate",
+            "EMPTY",
+            "red",
+            "chocolate",
+            "biscuit",
+            "EMPTY",
+            "chocolate"
         ],
         [
-            "EMPTY",
-            "EMPTY",
+            "chocolate",
+            "chocolate",
+            "muffin",
+            "chocolate",
+            "muffin",
+            "biscuit",
+            "red"
+        ],
+        [
+            "chocolate",
+            "donut",
+            "donut",
+            "chocolate",
+            "red",
+            "chocolate",
+            "donut"
+        ],
+        [
+            "red",
+            "chocolate_ice",
+            "chocolate_ice",
+            "donut",
+            "red_ice",
+            "muffin_ice",
+            "muffin"
+        ],
+        [
+            "muffin",
+            "muffin_ice",
+            "donut",
+            "chocolate_ice",
+            "chocolate",
             "biscuit_ice",
-            "muffin_ice",
-            "muffin_ice",
-            "muffin_ice",
-            "muffin_ice"
+            "donut"
         ],
         [
-            "unknown",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "unknown",
-            "unknown",
-            "donut_ice"
-        ],
-        [
-            "chocolate_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "chocolate_ice",
-            "muffin_ice",
-            "donut_ice"
-        ],
-        [
-            "chocolate_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "unknown",
-            "donut_ice"
-        ],
-        [
-            "muffin_ice",
-            "donut_ice",
-            "donut_ice",
-            "donut_ice",
-            "chocolate_ice",
-            "muffin_ice",
-            "donut_ice"
+            "donut",
+            "muffin",
+            "donut",
+            "chocolate",
+            "biscuit",
+            "chocolate",
+            "chocolate"
         ]
     ]
 }

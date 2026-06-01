@@ -1,71 +1,76 @@
 {
     "gameState": {
-        "movesLeft": "0",
-        "level": "0"
+        "movesLeft": "22",
+        "level": "18",
+        "targets": {
+            "biscuits": "0 / 24",
+            "brookie": "0 / 25",
+            "ice": "0 / 7"
+        }
     },
     "board": [
         [
-            "muffin_ice",
-            "EMPTY",
-            "muffin_ice",
-            "donut_ice",
-            "donut_ice",
-            "EMPTY",
-            "chocolate_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "muffin_ice",
-            "donut_ice",
-            "EMPTY",
-            "chocolate_ice",
-            "donut_ice"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice",
-            "chocolate_ice"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "muffin",
-            "muffin",
-            "muffin",
-            "EMPTY",
-            "EMPTY"
-        ],
-        [
-            "EMPTY",
-            "EMPTY",
-            "unknown",
-            "biscuit",
+            "chocolate",
+            "chocolate",
             "red",
+            "red",
+            "chocolate",
+            "muffin",
+            "donut"
+        ],
+        [
+            "red",
+            "EMPTY",
+            "red",
+            "chocolate",
+            "red",
+            "EMPTY",
+            "chocolate"
+        ],
+        [
+            "donut",
+            "red",
+            "chocolate",
+            "chocolate",
             "biscuit",
-            "EMPTY"
+            "muffin",
+            "red"
+        ],
+        [
+            "chocolate",
+            "red",
+            "red",
+            "muffin",
+            "chocolate",
+            "red",
+            "red"
+        ],
+        [
+            "red",
+            "muffin_ice",
+            "donut_ice",
+            "chocolate",
+            "chocolate_ice",
+            "biscuit_ice",
+            "muffin"
+        ],
+        [
+            "red",
+            "chocolate_ice",
+            "donut",
+            "chocolate_ice",
+            "donut",
+            "red_ice",
+            "donut"
+        ],
+        [
+            "chocolate",
+            "red",
+            "chocolate",
+            "red",
+            "muffin",
+            "chocolate",
+            "chocolate"
         ]
     ]
 }
