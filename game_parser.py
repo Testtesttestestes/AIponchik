@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import pytesseract
 import json
+import math
 import os
 import glob
 import re
@@ -35,6 +36,8 @@ DEFAULT_ROLLOUT_SAMPLES = 12
 DEFAULT_MAX_PATHS_PER_ITEM = 15
 FINISH_TARGET_BONUS = 50.0
 ENDGAME_GREEDY_MOVES = 2
+DEFAULT_POLICY_CANDIDATES = 32
+DEFAULT_POLICY_MODEL = os.path.join("models", "policy_network.json")
 
 
 @dataclass(frozen=True)
@@ -1559,7 +1562,207 @@ class GameBoardParser:
         return self.process_frame(img, debug_out_path=debug_out_path, source_name=image_path)
 
 
-def analyze_state(game_state, top=10):
+class RuntimeMoveFeatureEncoder:
+    """Pure-NumPy copy of the training feature encoder for inference."""
+
+    ITEMS = RandomGameSimulator.ITEMS
+    TARGETS = (*ITEMS, "ice")
+
+    def __init__(self):
+        self.pathfinder = MovePathfinder(max_paths_per_item=20, rollout_samples=0)
+        self.future_evaluator = self.pathfinder.future_evaluator
+
+    def encode(self, state: Dict, move: MoveCandidate) -> np.ndarray:
+        board = state.get("board", [])
+        rows = len(board)
+        cols = len(board[0]) if rows else 0
+        cells = max(1, rows * cols)
+        path = tuple(move.path)
+        path_len = max(1, len(path))
+        targets = self.pathfinder._normalize_targets(state.get("gameState", {}).get("targets", {}))
+        moves_left = self.pathfinder._parse_moves_left(state.get("gameState", {}).get("movesLeft")) or 0
+
+        board_counts = {item: 0 for item in self.ITEMS}
+        board_ice = 0
+        for row in board:
+            for cell in row:
+                item = MovePathfinder.base_item(cell)
+                if item in board_counts:
+                    board_counts[item] += 1
+                if MovePathfinder.has_ice(cell):
+                    board_ice += 1
+
+        path_ice = sum(1 for row, col in path if MovePathfinder.has_ice(board[row][col]))
+        own_remaining = targets.get(move.item, {}).get("remaining", 0)
+        ice_remaining = targets.get("ice", {}).get("remaining", 0)
+        own_collected = min(path_len, own_remaining) if own_remaining else 0
+        ice_collected = min(path_ice, ice_remaining) if ice_remaining else 0
+
+        row_values = [row for row, _ in path]
+        col_values = [col for _, col in path]
+        row_norm = max(1, rows - 1)
+        col_norm = max(1, cols - 1)
+        next_board = self.future_evaluator.simulate_after_move(board, path)
+        future = self.future_evaluator.evaluate(next_board, state.get("gameState", {}).get("targets", {}))
+
+        urgencies = {
+            name: (data.get("remaining", 0) / moves_left) if moves_left else 0.0
+            for name, data in targets.items()
+        }
+        other_urgencies = [value for name, value in urgencies.items() if name not in {move.item, "ice"}]
+
+        values: List[float] = [
+            path_len / cells,
+            path_ice / path_len,
+            own_collected / max(1, own_remaining),
+            ice_collected / max(1, ice_remaining),
+            moves_left / 40.0,
+            (max(row_values) - min(row_values) + 1) / max(1, rows),
+            (max(col_values) - min(col_values) + 1) / max(1, cols),
+            (sum(row_values) / path_len) / row_norm,
+            (sum(col_values) / path_len) / col_norm,
+            future.cluster_score / 12.0,
+            future.orphan_count / cells,
+            future.ice_target_score / 10.0,
+            future.cluster_count / cells,
+            min(1.5, urgencies.get(move.item, 0.0)) / 1.5,
+            min(1.5, urgencies.get("ice", 0.0)) / 1.5,
+            min(1.5, max(other_urgencies) if other_urgencies else 0.0) / 1.5,
+        ]
+        values.extend(1.0 if move.item == item else 0.0 for item in self.ITEMS)
+        values.extend(targets.get(target, {}).get("remaining", 0) / (10.0 if target == "ice" else 35.0) for target in self.TARGETS)
+        values.extend(board_counts[item] / cells for item in self.ITEMS)
+        values.append(board_ice / cells)
+        return np.asarray(values, dtype=np.float32)
+
+
+class NumpyNeuralMovePolicy:
+    """Load the trained PyTorch JSON policy and run inference without PyTorch."""
+
+    def __init__(self, payload):
+        self.mean = np.asarray(payload["standardization"]["mean"], dtype=np.float32)
+        self.std = np.asarray(payload["standardization"]["std"], dtype=np.float32)
+        network = payload["network"]
+        self.layers = (
+            (np.asarray(network["net.0.weight"], dtype=np.float32), np.asarray(network["net.0.bias"], dtype=np.float32)),
+            (np.asarray(network["net.3.weight"], dtype=np.float32), np.asarray(network["net.3.bias"], dtype=np.float32)),
+            (np.asarray(network["net.5.weight"], dtype=np.float32), np.asarray(network["net.5.bias"], dtype=np.float32)),
+        )
+
+    @staticmethod
+    def _gelu(x):
+        erf = np.vectorize(math.erf, otypes=[np.float32])
+        return 0.5 * x * (1.0 + erf(x / math.sqrt(2.0)))
+
+    @classmethod
+    def load(cls, path):
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        if payload.get("format") != "aiponchik-pytorch-policy-v2":
+            raise ValueError(f"Unsupported neural policy format in {path}: {payload.get('format')}")
+        expected_features = len(RuntimeMoveFeatureEncoder.ITEMS) + len(RuntimeMoveFeatureEncoder.TARGETS) + len(RuntimeMoveFeatureEncoder.ITEMS) + 17
+        actual_features = len(payload.get("featureNames", []))
+        if actual_features != expected_features:
+            raise ValueError(f"Policy feature count mismatch: model has {actual_features}, code expects {expected_features}")
+        return cls(payload)
+
+    def predict(self, x):
+        y = np.asarray(x, dtype=np.float32)
+        if y.ndim == 1:
+            y = y.reshape(1, -1)
+        y = (y - self.mean) / self.std
+        first_weight, first_bias = self.layers[0]
+        y = self._gelu(y @ first_weight.T + first_bias)
+        second_weight, second_bias = self.layers[1]
+        y = self._gelu(y @ second_weight.T + second_bias)
+        output_weight, output_bias = self.layers[2]
+        return (y @ output_weight.T + output_bias).reshape(-1)
+
+
+class NeuralPolicyMoveSelector:
+    """Rank pre-generated move candidates with a trained neural policy."""
+
+    def __init__(self, model_path=DEFAULT_POLICY_MODEL, candidates_per_move=DEFAULT_POLICY_CANDIDATES, blend_heuristic=0.0):
+        self.model_path = model_path
+        self.candidates_per_move = max(1, int(candidates_per_move))
+        self.blend_heuristic = max(0.0, min(1.0, float(blend_heuristic)))
+        self.model = NumpyNeuralMovePolicy.load(model_path)
+        self.encoder = RuntimeMoveFeatureEncoder()
+        self.pathfinder = MovePathfinder(max_paths_per_item=self.candidates_per_move, rollout_samples=0)
+
+    def rank_candidates(self, state, candidates):
+        if not candidates:
+            return []
+
+        import numpy as _np
+
+        selected = list(candidates)[: self.candidates_per_move]
+        features = _np.vstack([self.encoder.encode(state, move) for move in selected]).astype(_np.float32)
+        policy_scores = self.model.predict(features).astype(float)
+        combined_scores = policy_scores.copy()
+
+        if self.blend_heuristic > 0.0:
+            heuristic_scores = _np.asarray([move.score for move in selected], dtype=_np.float32)
+            heuristic_span = float(heuristic_scores.max() - heuristic_scores.min())
+            if heuristic_span > 1e-6:
+                heuristic_scores = (heuristic_scores - heuristic_scores.min()) / heuristic_span
+            else:
+                heuristic_scores = _np.zeros_like(heuristic_scores)
+
+            policy_span = float(policy_scores.max() - policy_scores.min())
+            normalized_policy = policy_scores
+            if policy_span > 1e-6:
+                normalized_policy = (policy_scores - policy_scores.min()) / policy_span
+            combined_scores = (1.0 - self.blend_heuristic) * normalized_policy + self.blend_heuristic * heuristic_scores
+
+        ranked = list(zip(selected, policy_scores, combined_scores))
+        ranked.sort(key=lambda row: (row[2], row[0].length), reverse=True)
+        return ranked
+
+    @staticmethod
+    def _move_to_policy_dict(move, policy_score, combined_score, blend_heuristic=0.0):
+        data = move.to_dict()
+        data["heuristicScore"] = data["score"]
+        data["policyScore"] = round(float(policy_score), 4)
+        if blend_heuristic > 0.0:
+            data["combinedScore"] = round(float(combined_score), 4)
+            data["score"] = data["combinedScore"]
+        else:
+            data["score"] = data["policyScore"]
+        data["selectedBy"] = "neuralPolicy"
+        return data
+
+    def analyze(self, game_state, top=10):
+        board = game_state.get("board", [])
+        targets = game_state.get("gameState", {}).get("targets", {})
+        moves_left = self.pathfinder._parse_moves_left(game_state.get("gameState", {}).get("movesLeft"))
+        paths = self.pathfinder.find_paths(board)
+        heuristic_candidates = self.pathfinder.score_paths(board, targets, paths, moves_left=moves_left)
+        ranked = self.rank_candidates(game_state, heuristic_candidates)
+        moves = [
+            self._move_to_policy_dict(move, policy_score, combined_score, self.blend_heuristic)
+            for move, policy_score, combined_score in ranked[:top]
+        ]
+
+        enriched = dict(game_state)
+        enriched["analysis"] = {
+            "validChains": len(paths),
+            "movesLeftParsed": moves_left,
+            "bestMoves": moves,
+            "ranker": "neuralPolicy",
+            "policyModel": self.model_path,
+            "policyCandidates": min(self.candidates_per_move, len(heuristic_candidates)),
+            "policyCandidateLimit": self.candidates_per_move,
+            "blendHeuristic": self.blend_heuristic,
+        }
+        enriched["bestMove"] = moves[0] if moves else None
+        return enriched
+
+
+def analyze_state(game_state, top=10, move_selector=None):
+    if move_selector is not None:
+        return move_selector.analyze(game_state, top=top)
+
     pathfinder = MovePathfinder()
     board = game_state.get("board", [])
     targets = game_state.get("gameState", {}).get("targets", {})
@@ -1571,6 +1774,7 @@ def analyze_state(game_state, top=10):
         "validChains": len(paths),
         "movesLeftParsed": moves_left,
         "bestMoves": [move.to_dict() for move in moves],
+        "ranker": "heuristic",
     }
     enriched["bestMove"] = moves[0].to_dict() if moves else None
     return enriched
@@ -1710,10 +1914,24 @@ def parse_args():
     cli.add_argument("--simulate-games", type=int, default=50, help="Number of simulated games to run.")
     cli.add_argument("--simulate-seed", type=int, default=20260601, help="Random seed for simulations.")
     cli.add_argument("--etalon-dir", default="etalon_images", help="Directory with ideal etalon JSON files for simulations.")
+    cli.add_argument("--policy-model", help="Use a trained neural policy JSON to rank candidate moves instead of the heuristic ranker.")
+    cli.add_argument("--policy-candidates", type=int, default=DEFAULT_POLICY_CANDIDATES,
+                     help="Number of heuristic candidates passed to the neural policy for each move.")
+    cli.add_argument("--blend-heuristic", type=float, default=0.0,
+                     help="Optional heuristic blend for neural ranking; 0.0 uses only the neural policy.")
     return cli.parse_args()
 
 
-def analyze_image_file(parser, image_path, out_path=None, top=10, overlay_path=None, show_window=False, window_ms=0):
+def analyze_image_file(
+    parser,
+    image_path,
+    out_path=None,
+    top=10,
+    overlay_path=None,
+    show_window=False,
+    window_ms=0,
+    move_selector=None,
+):
     print(f"Анализ: {image_path} ...", end=" ")
     frame = cv2.imread(image_path)
     debug_out_path = image_path.replace(".jpg", "_DEBUG.jpg")
@@ -1721,7 +1939,7 @@ def analyze_image_file(parser, image_path, out_path=None, top=10, overlay_path=N
     if not result_json:
         print("Ошибка")
         return None
-    result_json = analyze_state(result_json, top=top)
+    result_json = analyze_state(result_json, top=top, move_selector=move_selector)
     out_path = out_path or image_path.replace(".jpg", ".json")
     write_json_result(result_json, out_path)
     overlay_img = None
@@ -1796,7 +2014,7 @@ def analyze_captured_frame(parser, frame, out_path, debug_label, args):
     if not result_json:
         print(f"{debug_label}: стабильный кадр получен, но поле не найдено; продолжаю ожидание.")
         return None
-    result_json = analyze_state(result_json, top=args.top)
+    result_json = analyze_state(result_json, top=args.top, move_selector=getattr(args, "move_selector", None))
     write_json_result(result_json, out_path)
     overlay_path = args.overlay or out_path.rsplit(".", 1)[0] + "_MOVE.jpg"
     overlay_img = None
@@ -1927,8 +2145,26 @@ def analyze_scrcpy_stream(parser, args):
     return analyze_captured_frame(parser, frame, out_path, "scrcpy", args)
 
 
-if __name__ == "__main__":
+def build_move_selector(args, default_policy_model=None):
+    policy_model = args.policy_model or default_policy_model
+    if not policy_model:
+        return None
+    print(
+        f"Neural policy: loading {policy_model}; "
+        f"candidates per move={args.policy_candidates}; blend={args.blend_heuristic}"
+    )
+    return NeuralPolicyMoveSelector(
+        model_path=policy_model,
+        candidates_per_move=args.policy_candidates,
+        blend_heuristic=args.blend_heuristic,
+    )
+
+
+def main(default_policy_model=None):
     args = parse_args()
+    if default_policy_model and not args.policy_model:
+        args.policy_model = default_policy_model
+    args.move_selector = build_move_selector(args)
     parser = GameBoardParser()
 
     if args.simulate:
@@ -1946,6 +2182,7 @@ if __name__ == "__main__":
             overlay_path=args.overlay,
             show_window=args.show_overlay_window,
             window_ms=args.window_ms,
+            move_selector=args.move_selector,
         )
     else:
         images = glob.glob(os.path.join(args.dir, "*.jpg"))
@@ -1953,4 +2190,8 @@ if __name__ == "__main__":
         if not images:
             print(f"В папке {args.dir} не найдено файлов .jpg!")
         for img_path in images:
-            analyze_image_file(parser, img_path, top=args.top)
+            analyze_image_file(parser, img_path, top=args.top, move_selector=args.move_selector)
+
+
+if __name__ == "__main__":
+    main()
