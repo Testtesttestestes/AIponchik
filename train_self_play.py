@@ -2,7 +2,7 @@
 
 import argparse
 
-from neural_policy import TrainingConfig, SelfPlayDatasetBuilder, NeuralMovePolicy, evaluate_policy_games, FEATURE_NAMES
+from neural_policy2 import TrainingConfig, SelfPlayDatasetBuilder, NeuralMovePolicy, evaluate_policy_games, FEATURE_NAMES
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train AIponchik neural policy via Self-Play.")
