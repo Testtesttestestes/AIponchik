@@ -91,6 +91,16 @@ python neural_game_parser.py --policy-model models/policy_network.json --policy-
 
 В JSON-поле `analysis.ranker` будет `neuralPolicy`, `analysis.policyCandidateLimit` покажет лимит 32, а у ходов появятся `policyScore` и исходный `heuristicScore`.
 
+## Честное сравнение алгоритма и нейронки
+
+Чтобы проверить нейронку на абсолютно тех же стартовых данных, что и алгоритм, запускайте paired benchmark:
+
+```bash
+python compare_policy_benchmark.py --games 50 --base-seed 20260601 --blends 0.0,0.5 --out run_outputs/policy_benchmark_comparison.json
+```
+
+Он прогоняет старый heuristic-алгоритм, чистую нейронку (`blend=0.0`) и гибрид (`blend=0.5`) на одинаковых seed-ах `baseSeed + gameIndex`; в JSON сразу есть `deltaVsAlgorithm`.
+
 ## Быстро получить ход на Windows
 
 1. Откройте игру на телефоне и оставьте поле неподвижным.
