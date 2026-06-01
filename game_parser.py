@@ -1739,6 +1739,57 @@ def analyze_image_file(parser, image_path, out_path=None, top=10, overlay_path=N
     return result_json
 
 
+def frame_signature(frame, size=(64, 128)):
+    """Return a compact visual signature for unchanged-screen detection."""
+    if frame is None:
+        return None
+    return cv2.resize(frame, size, interpolation=cv2.INTER_AREA).tobytes()
+
+
+def board_signature_from_result(result):
+    """Return a deterministic board signature from a parsed game result."""
+    if not result:
+        return None
+    return json.dumps(result.get("board", []), ensure_ascii=False, sort_keys=True)
+
+
+def reuse_stable_display_if_unchanged(
+    frame,
+    result,
+    last_signature=None,
+    last_board_signature=None,
+    last_result=None,
+    last_display_frame=None,
+):
+    """Keep the previously drawn hint while the stable screen did not change.
+
+    The live GUI receives raw waiting frames while the next stable frame is being
+    collected.  Without this guard the freshly calculated overlay is replaced by
+    a plain frame for one cycle, which looks like the bot shows a move and hides
+    it on the next identical screenshot.
+    """
+    signature = frame_signature(frame)
+    board_signature = board_signature_from_result(result)
+    unchanged_frame = signature == last_signature
+    unchanged_board = bool(board_signature) and board_signature == last_board_signature
+
+    if last_display_frame is not None and (unchanged_frame or unchanged_board):
+        return {
+            "signature": last_signature if unchanged_frame else signature,
+            "board_signature": last_board_signature if unchanged_board else board_signature,
+            "result": last_result if last_result is not None else result,
+            "display_frame": last_display_frame,
+            "reused": True,
+        }
+
+    return {
+        "signature": signature,
+        "board_signature": board_signature,
+        "result": result,
+        "display_frame": frame,
+        "reused": False,
+    }
+
 def analyze_captured_frame(parser, frame, out_path, debug_label, args):
     debug_path = out_path.rsplit(".", 1)[0] + "_DEBUG.jpg"
     result_json = parser.process_frame(frame, debug_out_path=debug_path, source_name=debug_label)
@@ -1769,9 +1820,11 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
     last_board_signature = None
 
     def on_waiting_frame(frame, diff, stable_count):
+        display_frame = last_display_frame if last_display_frame is not None else frame
         return gui.render(
-            frame,
+            display_frame,
             "Ожидание стабилизации экрана...",
+            result=last_result,
             diff=diff,
             stable_count=stable_count,
         )
@@ -1789,32 +1842,22 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
                 print(f"{debug_label}: {exc}; продолжаю ожидание.")
                 continue
 
-            signature = cv2.resize(frame, (64, 128), interpolation=cv2.INTER_AREA).tobytes()
-            if signature == last_signature and last_display_frame is not None:
-                if args.gui and not gui.render(
-                    last_display_frame,
-                    "Экран стабилен, изменений нет; показываю последний рассчитанный ход...",
-                    result=last_result,
-                    stable_count=args.stable_frames,
-                ):
-                    break
-                if not args.watch:
-                    break
-                time.sleep(0.5)
-                continue
-            last_signature = signature
-
             result = analyze_captured_frame(parser, frame, out_path, debug_label, args)
-            display_frame = frame
+            display_state = reuse_stable_display_if_unchanged(
+                frame,
+                result,
+                last_signature=last_signature,
+                last_board_signature=last_board_signature,
+                last_result=last_result,
+                last_display_frame=last_display_frame,
+            )
+            last_signature = display_state["signature"]
+            display_frame = display_state["display_frame"]
             status = "Поле не найдено на стабильном экране; жду следующее состояние..."
             if result:
-                board_signature = json.dumps(result.get("board", []), ensure_ascii=False, sort_keys=True)
-                if board_signature == last_board_signature and last_display_frame is not None:
-                    display_frame = last_display_frame
-                    status = "Поле не изменилось; не пересчитываю ход и оставляю прошлую подсказку"
-                    result = last_result
+                if display_state["reused"]:
+                    status = "Экран не изменился; оставляю прошлую подсказку на месте"
                 else:
-                    last_board_signature = board_signature
                     if result.get("bestMove"):
                         display_frame = parser.draw_move_overlay(frame, result["bestMove"], args.overlay)
                         status = "Стабильный экран: лучший ход рассчитан"
@@ -1825,6 +1868,8 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
                         status = "Стабильный экран: ходов не найдено"
                     last_result = result
                     last_display_frame = display_frame
+                    last_board_signature = display_state["board_signature"]
+                result = display_state["result"]
             if args.gui and not gui.render(display_frame, status, result=result, stable_count=args.stable_frames):
                 break
             if not args.watch and not args.gui:

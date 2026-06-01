@@ -65,6 +65,53 @@ def test_captured_frame_without_board_returns_none_instead_of_raising(tmp_path):
     assert result is None
 
 
+def test_reuse_stable_display_keeps_overlay_for_identical_frame():
+    import numpy as np
+    from game_parser import frame_signature, reuse_stable_display_if_unchanged
+
+    frame = np.full((140, 140, 3), 10, dtype=np.uint8)
+    overlay = frame.copy()
+    overlay[20:40, 20:40] = 255
+    result = {"board": [["muffin", "muffin", "muffin"]], "bestMove": {"item": "muffin"}}
+
+    state = reuse_stable_display_if_unchanged(
+        frame,
+        result,
+        last_signature=frame_signature(frame),
+        last_board_signature=None,
+        last_result=result,
+        last_display_frame=overlay,
+    )
+
+    assert state["reused"] is True
+    assert np.array_equal(state["display_frame"], overlay)
+    assert state["result"] == result
+
+
+def test_reuse_stable_display_keeps_overlay_for_same_board_after_tiny_frame_change():
+    import numpy as np
+    from game_parser import board_signature_from_result, frame_signature, reuse_stable_display_if_unchanged
+
+    previous_frame = np.full((140, 140, 3), 10, dtype=np.uint8)
+    current_frame = previous_frame.copy()
+    current_frame[0, 0] = 11
+    overlay = previous_frame.copy()
+    overlay[60:80, 60:80] = 255
+    result = {"board": [["donut", "donut", "donut"]], "bestMove": {"item": "donut"}}
+
+    state = reuse_stable_display_if_unchanged(
+        current_frame,
+        result,
+        last_signature=frame_signature(previous_frame),
+        last_board_signature=board_signature_from_result(result),
+        last_result=result,
+        last_display_frame=overlay,
+    )
+
+    assert state["reused"] is True
+    assert np.array_equal(state["display_frame"], overlay)
+    assert state["board_signature"] == board_signature_from_result(result)
+
 def test_ice_target_scores_iced_base_tile():
     board = [["muffin_ice", "muffin", "muffin"]]
     path = ((0, 0), (0, 1), (0, 2))
