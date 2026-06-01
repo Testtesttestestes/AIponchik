@@ -30,6 +30,8 @@ def parse_args():
     parser.add_argument("--eval-seed", type=int, default=20260602, help="Held-out seed for post-training win-rate evaluation.")
     parser.add_argument("--target-win-rate", type=float, default=60.0, help="Target simulated win rate percentage to report against.")
     parser.add_argument("--blend-heuristic", type=float, default=0.0, help="Optional heuristic blend for evaluation only; 0 uses the neural policy alone.")
+    parser.add_argument("--include-losing-games", action="store_true",
+                        help="Keep failed teacher games in the training dataset. By default only successful games are used.")
     parser.add_argument("--resume", default=None, help="Path to existing model JSON to resume training.")
     
     return parser.parse_args()
@@ -48,6 +50,7 @@ def main():
         dropout=args.dropout,
         patience=args.patience,
         seed=args.seed,
+        successful_games_only=not args.include_losing_games,
     )
     
     model, metrics = train_policy(
