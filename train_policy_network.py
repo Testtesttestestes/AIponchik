@@ -20,11 +20,11 @@ def parse_args():
     parser.add_argument("--val-games", type=int, default=20, help="Held-out simulated games for validation.")
     parser.add_argument("--candidates", type=int, default=16, help="Candidate moves per state used for ranking labels.")
     parser.add_argument("--epochs", type=int, default=80, help="Maximum training epochs.")
-    parser.add_argument("--hidden-units", type=int, default=48, help="Hidden layer size.")
-    parser.add_argument("--learning-rate", type=float, default=0.003, help="Adam learning rate.")
-    parser.add_argument("--l2", type=float, default=0.0005, help="L2 regularization strength.")
-    parser.add_argument("--dropout", type=float, default=0.08, help="Hidden-layer dropout during training.")
-    parser.add_argument("--patience", type=int, default=12, help="Early-stopping patience on validation loss.")
+    parser.add_argument("--hidden-units", type=int, default=128, help="Hidden layer size (increased for PyTorch).")
+    parser.add_argument("--learning-rate", type=float, default=0.003, help="AdamW learning rate.")
+    parser.add_argument("--l2", type=float, default=0.0005, help="Weight decay strength.")
+    parser.add_argument("--dropout", type=float, default=0.1, help="Hidden-layer dropout during training.")
+    parser.add_argument("--patience", type=int, default=15, help="Early-stopping patience on validation loss.")
     parser.add_argument("--seed", type=int, default=20260601, help="Deterministic training seed.")
     parser.add_argument("--eval-games", type=int, default=50, help="Simulated games to evaluate with the trained policy after training.")
     parser.add_argument("--eval-seed", type=int, default=20260602, help="Held-out seed for post-training win-rate evaluation.")
@@ -48,6 +48,8 @@ def main():
         seed=args.seed,
     )
     model, metrics = train_policy(config, etalon_dir=args.etalon_dir)
+    
+    print("\nStarting post-training evaluation...")
     evaluation = evaluate_policy_games(
         model,
         games=args.eval_games,
@@ -59,13 +61,16 @@ def main():
     metrics["policyEvaluation"] = evaluation
     metrics["targetWinRate"] = args.target_win_rate
     metrics["targetReached"] = evaluation["successRate"] >= args.target_win_rate
+    
     model.save(args.out, metrics=metrics, config=config)
     ensure_parent_dir(args.metrics_out)
+    
     with open(args.metrics_out, "w", encoding="utf-8") as handle:
         json.dump(metrics, handle, indent=2, ensure_ascii=False)
+        
     target_text = "reached" if metrics["targetReached"] else "not reached"
     print(
-        "Training complete: "
+        f"\nTraining complete: "
         f"val top-1 agreement={metrics['valTop1Agreement']}%, "
         f"policy wins={evaluation['wins']}/{evaluation['games']} ({evaluation['successRate']}%; target {target_text}), "
         f"best val loss={metrics['bestValLoss']:.5f}, "
