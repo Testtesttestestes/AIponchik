@@ -343,11 +343,11 @@ class MovePathfinder:
                 dfs(item, row, col, {(row, col)}, [(row, col)])
         return paths
 
-    def score_paths(self, board, targets, paths):
+    def score_paths(self, board, targets, paths, moves_left=None):
         scored = []
         for path in paths:
             item = self.base_item(board[path[0][0]][path[0][1]])
-            score, reasons = self.score_move(board, targets, item, path)
+            score, reasons = self.score_move(board, targets, item, path, moves_left=moves_left)
             scored.append(MoveCandidate(item=item, path=tuple(path), score=score, reasons=tuple(reasons)))
         scored.sort(key=lambda move: (move.score, move.length), reverse=True)
         return scored
@@ -355,12 +355,13 @@ class MovePathfinder:
     def best_moves(self, game_state, limit=10):
         board = game_state.get("board", [])
         targets = game_state.get("gameState", {}).get("targets", {})
+        moves_left = self._parse_moves_left(game_state.get("gameState", {}).get("movesLeft"))
         paths = self.find_paths(board)
-        return self.score_paths(board, targets, paths)[:limit]
+        return self.score_paths(board, targets, paths, moves_left=moves_left)[:limit]
 
-    def score_move(self, board, targets, item, path):
+    def score_move(self, board, targets, item, path, moves_left=None):
         """Score a move as immediate reward plus future board quality."""
-        immediate_score, immediate_reasons = self.score_path(board, targets, item, path)
+        immediate_score, immediate_reasons = self.score_path(board, targets, item, path, moves_left=moves_left)
         next_board = self.future_evaluator.simulate_after_move(board, path)
         future = self.future_evaluator.evaluate(next_board, targets)
         total = self.weights.immediate * immediate_score + self.weights.future * future.score
@@ -372,10 +373,11 @@ class MovePathfinder:
         ]
         return total, reasons
 
-    def score_path(self, board, targets, item, path):
+    def score_path(self, board, targets, item, path, moves_left=None):
         score = float(len(path))
         reasons = [f"base length {len(path)}"]
         normalized_targets = self._normalize_targets(targets)
+        moves_left = self._parse_moves_left(moves_left)
 
         target = normalized_targets.get(item)
         completed_item_target = False
@@ -384,6 +386,9 @@ class MovePathfinder:
             bonus = useful * 20.0
             score += bonus
             reasons.append(f"target {item}: +{bonus:.0f} for {useful} useful tile(s)")
+            pressure_bonus, pressure_reasons = self._move_budget_pressure(target["remaining"], useful, moves_left, item)
+            score += pressure_bonus
+            reasons.extend(pressure_reasons)
         elif target:
             score = 0.0
             completed_item_target = True
@@ -396,6 +401,22 @@ class MovePathfinder:
             bonus = useful_ice * 15.0
             score += bonus
             reasons.append(f"ice target: +{bonus:.0f} for {useful_ice} iced tile(s)")
+            pressure_bonus, pressure_reasons = self._move_budget_pressure(
+                ice_target["remaining"], useful_ice, moves_left, "ice"
+            )
+            score += pressure_bonus
+            reasons.extend(pressure_reasons)
+
+        if moves_left and moves_left > 0:
+            urgent_targets = [
+                data["remaining"] / moves_left
+                for name, data in normalized_targets.items()
+                if data["remaining"] > 0 and name not in {item, "ice"}
+            ]
+            if urgent_targets and max(urgent_targets) >= 3.0 and not target and not ice_count:
+                penalty = min(30.0, sum(urgent_targets) * 4.0)
+                score -= penalty
+                reasons.append(f"move budget pressure: -{penalty:.0f} for non-target move")
 
         if not completed_item_target:
             if len(path) >= 6:
@@ -405,6 +426,39 @@ class MovePathfinder:
                 score += 5.0
                 reasons.append("medium chain bonus +5")
         return score, reasons
+
+    @staticmethod
+    def _parse_moves_left(value):
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return int(value) if value > 0 else None
+        match = re.search(r"\d+", str(value))
+        if not match:
+            return None
+        parsed = int(match.group(0))
+        return parsed if parsed > 0 else None
+
+    def _move_budget_pressure(self, remaining, collected, moves_left, target_name):
+        """Reward moves that keep target collection on pace for the move budget."""
+        if not moves_left or moves_left <= 0 or remaining <= 0 or collected <= 0:
+            return 0.0, []
+
+        required_per_move = remaining / moves_left
+        pace_bonus = collected * min(3.0, required_per_move) * 8.0
+        reasons = [
+            f"move budget {target_name}: +{pace_bonus:.0f} "
+            f"({remaining} left / {moves_left} moves = {required_per_move:.1f} per move)"
+        ]
+        if collected >= required_per_move:
+            finish_bonus = min(25.0, required_per_move * 5.0)
+            pace_bonus += finish_bonus
+            reasons.append(f"move budget {target_name}: on pace +{finish_bonus:.0f}")
+        else:
+            shortfall_penalty = min(25.0, (required_per_move - collected) * 6.0)
+            pace_bonus -= shortfall_penalty
+            reasons.append(f"move budget {target_name}: shortfall -{shortfall_penalty:.0f}")
+        return pace_bonus, reasons
 
     def _normalize_targets(self, targets):
         normalized = {}
@@ -504,7 +558,7 @@ class AdbScreenReader:
         small_second = cv2.resize(second, (160, 320), interpolation=cv2.INTER_AREA)
         return float(np.mean(cv2.absdiff(small_first, small_second)))
 
-    def wait_for_stable_frame(self, stable_frames=3, threshold=1.5, interval=0.35, timeout=20):
+    def wait_for_stable_frame(self, stable_frames=3, threshold=1.5, interval=0.35, timeout=20, status_callback=None):
         self.ensure_device()
         deadline = time.monotonic() + timeout
         previous = None
@@ -522,6 +576,10 @@ class AdbScreenReader:
                         return frame
                 else:
                     stable_count = 0
+                if status_callback and status_callback(frame, diff, stable_count) is False:
+                    raise KeyboardInterrupt
+            elif status_callback and status_callback(frame, None, stable_count) is False:
+                raise KeyboardInterrupt
             previous = frame
             time.sleep(interval)
         if last_frame is None:
@@ -561,7 +619,7 @@ class ScrcpyStreamReader:
         finally:
             capture.release()
 
-    def wait_for_stable_frame(self, stable_frames=3, threshold=1.5, interval=0.35, timeout=20):
+    def wait_for_stable_frame(self, stable_frames=3, threshold=1.5, interval=0.35, timeout=20, status_callback=None):
         capture = cv2.VideoCapture(self.source)
         if not capture.isOpened():
             raise RuntimeError(f"Could not open scrcpy/OpenCV stream source: {self.source}")
@@ -585,6 +643,10 @@ class ScrcpyStreamReader:
                             return frame
                     else:
                         stable_count = 0
+                    if status_callback and status_callback(frame, diff, stable_count) is False:
+                        raise KeyboardInterrupt
+                elif status_callback and status_callback(frame, None, stable_count) is False:
+                    raise KeyboardInterrupt
                 previous = frame
                 time.sleep(interval)
             if last_frame is None:
@@ -962,11 +1024,13 @@ def analyze_state(game_state, top=10):
     pathfinder = MovePathfinder()
     board = game_state.get("board", [])
     targets = game_state.get("gameState", {}).get("targets", {})
+    moves_left = pathfinder._parse_moves_left(game_state.get("gameState", {}).get("movesLeft"))
     paths = pathfinder.find_paths(board)
-    moves = pathfinder.score_paths(board, targets, paths)[:top]
+    moves = pathfinder.score_paths(board, targets, paths, moves_left=moves_left)[:top]
     enriched = dict(game_state)
     enriched["analysis"] = {
         "validChains": len(paths),
+        "movesLeftParsed": moves_left,
         "bestMoves": [move.to_dict() for move in moves],
     }
     enriched["bestMove"] = moves[0].to_dict() if moves else None
@@ -1019,6 +1083,63 @@ def show_overlay_window(image, title="AIponchik move overlay", wait_ms=0):
     cv2.destroyWindow(title)
 
 
+class MoveAssistantGui:
+    """Persistent OpenCV UI for live screen watching and move suggestions."""
+
+    def __init__(self, title="AIponchik live assistant", enabled=True):
+        self.title = title
+        self.enabled = enabled
+        if enabled:
+            cv2.namedWindow(self.title, cv2.WINDOW_NORMAL)
+
+    def render(self, frame, status, result=None, diff=None, stable_count=0):
+        if not self.enabled or frame is None:
+            return True
+
+        canvas = frame.copy()
+        h, w = canvas.shape[:2]
+        panel_h = max(170, int(h * 0.13))
+        cv2.rectangle(canvas, (0, 0), (w, panel_h), (20, 20, 20), -1)
+        cv2.putText(canvas, status, (24, 48), cv2.FONT_HERSHEY_SIMPLEX, 1.05, (0, 255, 255), 3, cv2.LINE_AA)
+        details = [f"stable frames: {stable_count}"]
+        if diff is not None:
+            details.append(f"screen diff: {diff:.2f}")
+        if result:
+            game_state = result.get("gameState", {})
+            best = result.get("bestMove")
+            details.append(f"moves left: {game_state.get('movesLeft', '?')}")
+            if best:
+                details.append(f"best: {best.get('item', '?')} x{best.get('length', '?')} score={best.get('score', '?')}")
+            else:
+                details.append("best: no valid chain")
+        details.append("q/Esc: quit")
+        for index, line in enumerate(details):
+            cv2.putText(canvas, line, (24, 88 + index * 34), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+
+        max_h = 1200
+        scale = min(1.0, max_h / float(h)) if h else 1.0
+        cv2.resizeWindow(self.title, max(1, int(w * scale)), max(1, int(h * scale)))
+        try:
+            cv2.setWindowProperty(self.title, cv2.WND_PROP_TOPMOST, 1)
+        except cv2.error:
+            pass
+        cv2.imshow(self.title, canvas)
+        key = cv2.waitKey(1) & 0xFF
+        if key in (27, ord("q"), ord("Q")):
+            return False
+        try:
+            return cv2.getWindowProperty(self.title, cv2.WND_PROP_VISIBLE) >= 1
+        except cv2.error:
+            return False
+
+    def close(self):
+        if self.enabled:
+            try:
+                cv2.destroyWindow(self.title)
+            except cv2.error:
+                pass
+
+
 def parse_args():
     cli = argparse.ArgumentParser(description="Parse Cookie Cats board screenshots and suggest the best chain.")
     cli.add_argument("--image", help="Analyze a single local screenshot.")
@@ -1034,6 +1155,10 @@ def parse_args():
     cli.add_argument("--overlay", help="Output image path with the best calculated move drawn over the screen.")
     cli.add_argument("--show-overlay-window", action="store_true",
                      help="Show the calculated move in a topmost OpenCV window after saving it.")
+    cli.add_argument("--gui", action="store_true",
+                     help="Run a persistent GUI that waits for stable screens and updates the suggested move.")
+    cli.add_argument("--watch", action="store_true",
+                     help="Keep watching ADB/scrcpy after each stable analysis instead of exiting after one frame.")
     cli.add_argument("--window-ms", type=int, default=0,
                      help="Milliseconds to keep --show-overlay-window open; 0 waits for a key press.")
     cli.add_argument("--top", type=int, default=10, help="Number of suggested moves to include.")
@@ -1070,7 +1195,8 @@ def analyze_captured_frame(parser, frame, out_path, debug_label, args):
     debug_path = out_path.rsplit(".", 1)[0] + "_DEBUG.jpg"
     result_json = parser.process_frame(frame, debug_out_path=debug_path, source_name=debug_label)
     if not result_json:
-        raise RuntimeError(f"{debug_label} frame was stable, but board parsing failed")
+        print(f"{debug_label}: стабильный кадр получен, но поле не найдено; продолжаю ожидание.")
+        return None
     result_json = analyze_state(result_json, top=args.top)
     write_json_result(result_json, out_path)
     overlay_path = args.overlay or out_path.rsplit(".", 1)[0] + "_MOVE.jpg"
@@ -1085,9 +1211,68 @@ def analyze_captured_frame(parser, frame, out_path, debug_label, args):
     return result_json
 
 
+def run_live_assistant(parser, reader, args, debug_label, default_out):
+    """Continuously wait for stable frames, analyze them, and keep a GUI updated."""
+    out_path = args.out or default_out
+    gui = MoveAssistantGui(enabled=args.gui)
+    last_signature = None
+
+    def on_waiting_frame(frame, diff, stable_count):
+        return gui.render(
+            frame,
+            "Ожидание стабилизации экрана...",
+            diff=diff,
+            stable_count=stable_count,
+        )
+
+    try:
+        while True:
+            try:
+                frame = reader.wait_for_stable_frame(
+                    stable_frames=args.stable_frames,
+                    threshold=args.stable_threshold,
+                    timeout=args.timeout,
+                    status_callback=on_waiting_frame if args.gui else None,
+                )
+            except TimeoutError as exc:
+                print(f"{debug_label}: {exc}; продолжаю ожидание.")
+                continue
+
+            signature = cv2.resize(frame, (64, 128), interpolation=cv2.INTER_AREA).tobytes()
+            if signature == last_signature:
+                if args.gui and not gui.render(frame, "Экран стабилен, изменений нет; жду следующий кадр..."):
+                    break
+                if not args.watch:
+                    break
+                time.sleep(0.5)
+                continue
+            last_signature = signature
+
+            result = analyze_captured_frame(parser, frame, out_path, debug_label, args)
+            display_frame = frame
+            status = "Поле не найдено на стабильном экране; жду следующее состояние..."
+            if result:
+                if result.get("bestMove"):
+                    display_frame = parser.draw_move_overlay(frame, result["bestMove"], args.overlay)
+                    status = "Стабильный экран: лучший ход рассчитан"
+                else:
+                    status = "Стабильный экран: ходов не найдено"
+            if args.gui and not gui.render(display_frame, status, result=result, stable_count=args.stable_frames):
+                break
+            if not args.watch and not args.gui:
+                break
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        print("Остановлено пользователем.")
+    finally:
+        gui.close()
+
+
 def analyze_adb_screen(parser, args):
     print("ADB: подключаюсь к устройству и жду стабильности экрана...")
     reader = AdbScreenReader(adb_path=args.adb_path, serial=args.serial)
+    if args.watch or args.gui:
+        return run_live_assistant(parser, reader, args, "adb", os.path.join("test_images", "adb_capture.json"))
     frame = reader.wait_for_stable_frame(
         stable_frames=args.stable_frames,
         threshold=args.stable_threshold,
@@ -1100,6 +1285,8 @@ def analyze_adb_screen(parser, args):
 def analyze_scrcpy_stream(parser, args):
     print(f"scrcpy/OpenCV: читаю поток {args.stream} и жду стабильности экрана...")
     reader = ScrcpyStreamReader(args.stream)
+    if args.watch or args.gui:
+        return run_live_assistant(parser, reader, args, "scrcpy", os.path.join("test_images", "scrcpy_capture.json"))
     frame = reader.wait_for_stable_frame(
         stable_frames=args.stable_frames,
         threshold=args.stable_threshold,
