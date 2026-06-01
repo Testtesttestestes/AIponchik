@@ -1700,6 +1700,8 @@ class NumpyNeuralMovePolicy:
 class NeuralPolicyMoveSelector:
     """Rank pre-generated move candidates with a trained neural policy."""
 
+    MIN_OFF_TARGET_SETUP_LENGTH = 4
+
     def __init__(self, model_path=DEFAULT_POLICY_MODEL, candidates_per_move=DEFAULT_POLICY_CANDIDATES, blend_heuristic=0.0):
         self.model_path = model_path
         self.candidates_per_move = max(1, int(candidates_per_move))
@@ -1707,8 +1709,58 @@ class NeuralPolicyMoveSelector:
         self.model = NumpyNeuralMovePolicy.load(model_path)
         self.encoder = RuntimeMoveFeatureEncoder()
         self.pathfinder = MovePathfinder(max_paths_per_item=self.candidates_per_move, rollout_samples=0)
+        self.last_target_guard = None
+
+    def _direct_target_yield(self, state, move):
+        board = state.get("board", [])
+        targets = self.pathfinder._normalize_targets(state.get("gameState", {}).get("targets", {}))
+        direct = 0
+
+        target = targets.get(move.item)
+        if target and target["remaining"] > 0:
+            direct += min(move.length, target["remaining"])
+
+        ice_target = targets.get("ice")
+        if ice_target and ice_target["remaining"] > 0:
+            ice_hits = sum(1 for row, col in move.path if MovePathfinder.has_ice(board[row][col]))
+            direct += min(ice_hits, ice_target["remaining"])
+
+        return direct
+
+    def _apply_target_guard(self, state, ranked):
+        self.last_target_guard = None
+        if len(ranked) < 2:
+            return ranked
+
+        top_move, top_policy_score, top_combined_score = ranked[0]
+        if self._direct_target_yield(state, top_move) > 0:
+            return ranked
+        if top_move.length >= self.MIN_OFF_TARGET_SETUP_LENGTH:
+            return ranked
+
+        target_rows = [row for row in ranked if self._direct_target_yield(state, row[0]) > 0]
+        if not target_rows:
+            return ranked
+
+        replacement = target_rows[0]
+        replacement_index = ranked.index(replacement)
+        reordered = [replacement] + ranked[:replacement_index] + ranked[replacement_index + 1:]
+        self.last_target_guard = {
+            "applied": True,
+            "reason": "short off-target neural pick was replaced by the best immediate target collector",
+            "blockedItem": top_move.item,
+            "blockedLength": top_move.length,
+            "blockedPolicyScore": round(float(top_policy_score), 4),
+            "blockedCombinedScore": round(float(top_combined_score), 4),
+            "replacementItem": replacement[0].item,
+            "replacementLength": replacement[0].length,
+            "replacementPolicyScore": round(float(replacement[1]), 4),
+            "replacementCombinedScore": round(float(replacement[2]), 4),
+        }
+        return reordered
 
     def rank_candidates(self, state, candidates):
+        self.last_target_guard = None
         if not candidates:
             return []
 
@@ -1735,7 +1787,7 @@ class NeuralPolicyMoveSelector:
 
         ranked = list(zip(selected, policy_scores, combined_scores))
         ranked.sort(key=lambda row: (row[2], row[0].length), reverse=True)
-        return ranked
+        return self._apply_target_guard(state, ranked)
 
     @staticmethod
     def _move_to_policy_dict(move, policy_score, combined_score, blend_heuristic=0.0):
@@ -1761,6 +1813,11 @@ class NeuralPolicyMoveSelector:
             self._move_to_policy_dict(move, policy_score, combined_score, self.blend_heuristic)
             for move, policy_score, combined_score in ranked[:top]
         ]
+        if self.last_target_guard and moves:
+            moves[0]["selectedBy"] = "neuralPolicyTargetGuard"
+            moves[0].setdefault("reasons", []).append(
+                "target guard: replaced a short off-target neural pick with an immediate target collector"
+            )
 
         enriched = dict(game_state)
         enriched["analysis"] = {
@@ -1772,6 +1829,7 @@ class NeuralPolicyMoveSelector:
             "policyCandidates": min(self.candidates_per_move, len(heuristic_candidates)),
             "policyCandidateLimit": self.candidates_per_move,
             "blendHeuristic": self.blend_heuristic,
+            "policyTargetGuard": self.last_target_guard or {"applied": False},
         }
         enriched["bestMove"] = moves[0] if moves else None
         return enriched

@@ -281,8 +281,9 @@ class NeuralMovePolicy:
             raise ValueError("Policy feature list does not match this code version")
             
         network = payload["network"]
-        # Derive sizes from weights
-        input_size = len(payload["featureNames"])
+        # Derive sizes from weights so small unit-test models do not need to
+        # pretend they use the production feature vector.
+        input_size = len(network["net.0.weight"][0])
         hidden_units = len(network["net.0.bias"])
         
         policy = cls(input_size, hidden_units)
@@ -517,6 +518,23 @@ def train_policy(config: TrainingConfig, etalon_dir="etalon_images", save_path=N
     return model, metrics
 
 
+def _direct_target_yield(pathfinder: MovePathfinder, state: Dict, move: MoveCandidate) -> int:
+    board = state.get("board", [])
+    targets = pathfinder._normalize_targets(state.get("gameState", {}).get("targets", {}))
+    direct = 0
+
+    target = targets.get(move.item)
+    if target and target["remaining"] > 0:
+        direct += min(move.length, target["remaining"])
+
+    ice_target = targets.get("ice")
+    if ice_target and ice_target["remaining"] > 0:
+        ice_hits = sum(1 for row, col in move.path if MovePathfinder.has_ice(board[row][col]))
+        direct += min(ice_hits, ice_target["remaining"])
+
+    return direct
+
+
 def select_policy_move(model: NeuralMovePolicy, encoder: MoveFeatureEncoder, state: Dict, candidates: Sequence[MoveCandidate], blend_heuristic: float = 0.0):
     if not candidates:
         return None
@@ -538,8 +556,16 @@ def select_policy_move(model: NeuralMovePolicy, encoder: MoveFeatureEncoder, sta
         combined = (1.0 - blend_heuristic) * neural_scores + blend_heuristic * heuristic_scores
     else:
         combined = neural_scores
-        
-    return candidates[int(np.argmax(combined))]
+
+    ranked_indices = sorted(range(len(candidates)), key=lambda idx: (combined[idx], candidates[idx].length), reverse=True)
+    best = candidates[ranked_indices[0]]
+    if _direct_target_yield(encoder.pathfinder, state, best) == 0 and best.length < 4:
+        for idx in ranked_indices[1:]:
+            candidate = candidates[idx]
+            if _direct_target_yield(encoder.pathfinder, state, candidate) > 0:
+                return candidate
+
+    return best
 
 
 def evaluate_policy_games(
