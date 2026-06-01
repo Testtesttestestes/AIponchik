@@ -46,8 +46,8 @@ FEATURE_NAMES = (
 
 @dataclass(frozen=True)
 class TrainingConfig:
-    train_games: int = 60
-    val_games: int = 20
+    train_games: int = 210
+    val_games: int = 70
     candidates_per_state: int = 16
     epochs: int = 80
     hidden_units: int = 128
@@ -75,6 +75,22 @@ class PolicyDataset:
     @property
     def state_count(self):
         return int(len(np.unique(self.state_ids))) if self.state_ids.size else 0
+
+
+@dataclass
+class GameSampleBuffer:
+    """Candidate rows collected from one complete teacher-played game."""
+
+    features: List[np.ndarray]
+    labels: List[float]
+    state_ids: List[int]
+    best_rows: List[int]
+    state_count: int
+    success: bool
+
+    @property
+    def size(self):
+        return len(self.features)
 
 
 class PyTorchMLP(nn.Module):
@@ -281,8 +297,9 @@ class NeuralMovePolicy:
             raise ValueError("Policy feature list does not match this code version")
             
         network = payload["network"]
-        # Derive sizes from weights
-        input_size = len(payload["featureNames"])
+        # Derive sizes from weights so small unit-test models do not need to
+        # pretend they use the production feature vector.
+        input_size = len(network["net.0.weight"][0])
         hidden_units = len(network["net.0.bias"])
         
         policy = cls(input_size, hidden_units)
@@ -320,19 +337,32 @@ class PolicyTrainingDatasetBuilder:
         self.successful_games_only = successful_games_only
         
     def _build_single_game(self, game_index: int, seed_offset: int):
-        # Локальная инициализация симулятора для каждого процесса (избегает конфликтов состояний)
+        """Play one teacher game and return its rows only if it is usable.
+
+        The important detail is that candidate features are kept in this
+        per-game buffer until the final success flag is known.  With
+        ``successful_games_only=True`` a losing trajectory never reaches the
+        aggregate dataset, so the policy is not trained to imitate decisions
+        from teacher games that ended in a dead end.
+        """
         from game_parser import SimulationConfig, RandomGameSimulator, MovePathfinder
-        config = SimulationConfig(seed=self.simulator.config.seed + seed_offset + game_index, ice_hits=self.simulator.config.ice_hits)
+
+        config = SimulationConfig(
+            seed=self.simulator.config.seed + seed_offset + game_index,
+            ice_hits=self.simulator.config.ice_hits,
+        )
         local_simulator = RandomGameSimulator(
-            etalon_dir=self.simulator.etalon_dir, 
-            config=config, 
-            pathfinder=MovePathfinder(max_paths_per_item=20, rollout_samples=0)
+            etalon_dir=self.simulator.etalon_dir,
+            config=config,
+            pathfinder=MovePathfinder(max_paths_per_item=20, rollout_samples=0),
         )
         local_encoder = MoveFeatureEncoder()
-        
-        features, labels, state_ids, best_rows = [], [], [], []
-        
-        # Копируем логику из _iter_teacher_states, но используем local_simulator
+
+        game_features: List[np.ndarray] = []
+        game_labels: List[float] = []
+        game_state_ids: List[int] = []
+        game_best_rows: List[int] = []
+
         template = local_simulator.etalon_states[int(local_simulator.rng.integers(0, len(local_simulator.etalon_states)))]
         difficulty = list(local_simulator.DIFFICULTIES)[(game_index - 1) % len(local_simulator.DIFFICULTIES)]
         modifiers = local_simulator.DIFFICULTIES[difficulty]
@@ -340,51 +370,61 @@ class PolicyTrainingDatasetBuilder:
         moves_limit = local_simulator._moves_limit(template, modifiers)
         targets_remaining = local_simulator._scaled_targets(template, modifiers)
         board, ice_hp = local_simulator._random_board_from_template(template, modifiers)
-        
+
         state_id_counter = 0
         for turn in range(1, moves_limit + 1):
             if local_simulator._targets_done(targets_remaining):
                 break
+
             state = local_simulator._state_for_solver(board, ice_hp, targets_remaining, moves_limit - turn + 1, level)
             paths = local_simulator.pathfinder.find_paths(state["board"])
             candidates = local_simulator.pathfinder.score_paths(
-                state["board"], state["gameState"]["targets"], paths, moves_left=moves_limit - turn + 1
+                state["board"],
+                state["gameState"]["targets"],
+                paths,
+                moves_left=moves_limit - turn + 1,
             )
-            
+
             if not candidates:
                 board, ice_hp = local_simulator._force_reseed_playable_area(board, ice_hp)
                 continue
-                
+
             if len(candidates) >= 2:
                 selected = candidates[: self.candidates_per_state]
                 scores = np.asarray([move.score for move in selected], dtype=np.float32)
                 score_span = float(scores.max() - scores.min())
                 normalized = np.ones_like(scores) if score_span < 1e-6 else (scores - scores.min()) / score_span
-                
-                start_row = len(features)
+
+                start_row = len(game_features)
                 for move, label in zip(selected, normalized):
-                    features.append(local_encoder.encode(state, move))
-                    labels.append(float(label))
-                    # Временно используем state_id_counter, поправим смещение при сборке
-                    state_ids.append(state_id_counter) 
-                best_rows.append(start_row + int(np.argmax(normalized)))
+                    game_features.append(local_encoder.encode(state, move))
+                    game_labels.append(float(label))
+                    game_state_ids.append(state_id_counter)
+                game_best_rows.append(start_row + int(np.argmax(normalized)))
                 state_id_counter += 1
-                
+
             best_move = candidates[0]
             local_simulator._apply_move(board, ice_hp, best_move.path, targets_remaining)
             local_simulator._refill_board(board, ice_hp)
-            
+
         success = local_simulator._targets_done(targets_remaining)
         if self.successful_games_only and not success:
-            return [], [], [], [], 0, False
+            return GameSampleBuffer([], [], [], [], state_id_counter, success)
 
-        return features, labels, state_ids, best_rows, state_id_counter, success
+        return GameSampleBuffer(
+            game_features,
+            game_labels,
+            game_state_ids,
+            game_best_rows,
+            state_id_counter,
+            success,
+        )
 
     def build(self, games: int, seed_offset: int = 0) -> PolicyDataset:
-        cores = os.cpu_count() # Забираем все доступные ядра
+        cores = max(1, min(os.cpu_count() or 1, games))
         mode = "successful teacher games only" if self.successful_games_only else "all teacher games"
         print(f"Building dataset for {games} games using {cores} CPU cores ({mode})...")
-        
+
         all_features = []
         all_labels = []
         all_state_ids = []
@@ -392,39 +432,42 @@ class PolicyTrainingDatasetBuilder:
         global_state_id = 0
         successful_games = 0
         kept_games = 0
-        
-        # Запускаем пул процессов
+        discarded_games = 0
+        attempted_states = 0
+
         with concurrent.futures.ProcessPoolExecutor(max_workers=cores) as executor:
             futures = [executor.submit(self._build_single_game, i, seed_offset) for i in range(1, games + 1)]
-            
+
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    f_feats, f_labels, f_state_ids, f_best_rows, states_processed, success = future.result()
-                    successful_games += int(success)
-                    if not f_feats:
+                    game = future.result()
+                    successful_games += int(game.success)
+                    attempted_states += game.state_count
+                    if not game.features:
+                        if self.successful_games_only and not game.success:
+                            discarded_games += 1
                         continue
+
                     kept_games += 1
-                        
-                    # Корректируем ID состояний и индексы строк для объединения
                     current_rows_offset = len(all_features)
-                    shifted_state_ids = [sid + global_state_id for sid in f_state_ids]
-                    shifted_best_rows = [row + current_rows_offset for row in f_best_rows]
-                    
-                    all_features.extend(f_feats)
-                    all_labels.extend(f_labels)
+                    shifted_state_ids = [sid + global_state_id for sid in game.state_ids]
+                    shifted_best_rows = [row + current_rows_offset for row in game.best_rows]
+
+                    all_features.extend(game.features)
+                    all_labels.extend(game.labels)
                     all_state_ids.extend(shifted_state_ids)
                     all_best_rows.extend(shifted_best_rows)
-                    
-                    global_state_id += states_processed
+                    global_state_id += game.state_count
                 except Exception as e:
                     print(f"Error processing game: {e}")
-    
+
         if not all_features:
             raise RuntimeError("Could not build a policy dataset: no candidate moves found")
-            
+
         print(
-            f"Dataset compiled: {len(all_features)} move candidates across {global_state_id} board states "
-            f"from {kept_games}/{games} kept games ({successful_games} teacher wins)."
+            f"Dataset compiled: {len(all_features)} move candidates across {global_state_id} kept board states "
+            f"from {kept_games}/{games} kept games ({successful_games} teacher wins, "
+            f"{discarded_games} losing games discarded)."
         )
         dataset = PolicyDataset(
             x=np.vstack(all_features).astype(np.float32),
@@ -434,7 +477,9 @@ class PolicyTrainingDatasetBuilder:
         )
         dataset.source_games = games
         dataset.kept_games = kept_games
+        dataset.discarded_games = discarded_games
         dataset.successful_games = successful_games
+        dataset.attempted_states = attempted_states
         dataset.successful_games_only = self.successful_games_only
         return dataset
 
@@ -510,9 +555,13 @@ def train_policy(config: TrainingConfig, etalon_dir="etalon_images", save_path=N
         "valStates": val.state_count,
         "successfulGamesOnly": config.successful_games_only,
         "trainGamesKept": getattr(train, "kept_games", None),
+        "trainGamesDiscarded": getattr(train, "discarded_games", None),
         "trainTeacherWins": getattr(train, "successful_games", None),
+        "trainAttemptedStates": getattr(train, "attempted_states", None),
         "valGamesKept": getattr(val, "kept_games", None),
+        "valGamesDiscarded": getattr(val, "discarded_games", None),
         "valTeacherWins": getattr(val, "successful_games", None),
+        "valAttemptedStates": getattr(val, "attempted_states", None),
     })
     return model, metrics
 
@@ -538,7 +587,7 @@ def select_policy_move(model: NeuralMovePolicy, encoder: MoveFeatureEncoder, sta
         combined = (1.0 - blend_heuristic) * neural_scores + blend_heuristic * heuristic_scores
     else:
         combined = neural_scores
-        
+
     return candidates[int(np.argmax(combined))]
 
 
