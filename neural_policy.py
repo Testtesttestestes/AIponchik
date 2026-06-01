@@ -80,7 +80,7 @@ class MoveFeatureEncoder:
     """Encode a board state and one candidate move into numeric features."""
 
     def __init__(self):
-        self.pathfinder = MovePathfinder(max_paths_per_item=80)
+        self.pathfinder = MovePathfinder(max_paths_per_item=20, rollout_samples=0)
         self.future_evaluator = self.pathfinder.future_evaluator
 
     def encode(self, state: Dict, move: MoveCandidate) -> np.ndarray:
@@ -302,7 +302,7 @@ class PolicyTrainingDatasetBuilder:
 
     def __init__(self, etalon_dir="etalon_images", seed=20260601, ice_hits=3, candidates_per_state=16):
         config = SimulationConfig(seed=seed, ice_hits=ice_hits)
-        self.simulator = RandomGameSimulator(etalon_dir=etalon_dir, config=config, pathfinder=MovePathfinder(max_paths_per_item=80))
+        self.simulator = RandomGameSimulator(etalon_dir=etalon_dir, config=config, pathfinder=MovePathfinder(max_paths_per_item=20, rollout_samples=0))
         self.encoder = MoveFeatureEncoder()
         self.candidates_per_state = candidates_per_state
 
@@ -433,7 +433,7 @@ def evaluate_policy_games(
     simulator = RandomGameSimulator(
         etalon_dir=etalon_dir,
         config=SimulationConfig(seed=seed),
-        pathfinder=MovePathfinder(max_paths_per_item=80),
+        pathfinder=MovePathfinder(max_paths_per_item=20, rollout_samples=0),
     )
     encoder = MoveFeatureEncoder()
     results = []
