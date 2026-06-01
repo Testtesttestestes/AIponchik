@@ -15,7 +15,16 @@ try:
 except ImportError:  # pragma: no cover - exercised only without optional dependency
     optuna = None
 
-from game_parser import HeuristicWeights, MovePathfinder, RandomGameSimulator, SimulationConfig, write_json_result
+from game_parser import (
+    DEFAULT_MAX_PATHS_PER_ITEM,
+    DEFAULT_ROLLOUT_SAMPLES,
+    DEFAULT_SEARCH_DEPTH,
+    HeuristicWeights,
+    MovePathfinder,
+    RandomGameSimulator,
+    SimulationConfig,
+    write_json_result,
+)
 
 
 def build_pathfinder(weights, args):
@@ -115,9 +124,9 @@ def parse_args():
     parser.add_argument("--games-per-trial", type=int, default=50)
     parser.add_argument("--seed", type=int, default=20260601)
     parser.add_argument("--etalon-dir", default="etalon_images")
-    parser.add_argument("--search-depth", type=int, default=2)
-    parser.add_argument("--rollout-samples", type=int, default=0)
-    parser.add_argument("--max-paths-per-item", type=int, default=15)
+    parser.add_argument("--search-depth", type=int, default=DEFAULT_SEARCH_DEPTH)
+    parser.add_argument("--rollout-samples", type=int, default=DEFAULT_ROLLOUT_SAMPLES)
+    parser.add_argument("--max-paths-per-item", type=int, default=DEFAULT_MAX_PATHS_PER_ITEM)
     parser.add_argument("--out", default="run_outputs/heuristic_tuning.json")
     return parser.parse_args()
 

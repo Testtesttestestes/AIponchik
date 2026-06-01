@@ -4,7 +4,21 @@
 
 ## Live GUI без перезапуска
 
-Для постоянной работы запустите ADB-режим с графическим окном:
+Для постоянной работы на Windows запустите ADB-режим с графическим окном через готовый bat-скрипт:
+
+```bat
+scripts\run_adb_gui.bat
+```
+
+Он повторяет рекомендованный ADB screencap-подход из раздела ниже: ищет `adb.exe` в `AIPONCHIK_ADB`, затем в `PATH`, затем рядом с `scrcpy`; пишет результаты в `run_outputs`; открывает постоянное topmost-окно подсказки и не нажимает на телефон. Если нужно указать конкретное устройство или другую папку вывода:
+
+```bat
+set AIPONCHIK_SERIAL=emulator-5554
+set AIPONCHIK_OUT_DIR=D:\aiponchik_runs
+scripts\run_adb_gui.bat
+```
+
+Та же команда напрямую через Python:
 
 ```bash
 python game_parser.py --adb --gui --out run_outputs/adb_capture.json --overlay run_outputs/adb_MOVE.jpg
@@ -64,7 +78,7 @@ scripts\start_scrcpy_high_quality.bat 48M h264
    * `run_outputs\adb_capture_DEBUG.jpg` — отладочная разметка распознанных клеток.
    * `run_outputs\adb_MOVE.jpg` — скриншот с рассчитанным ходом.
 
-Если скрипт пишет, что не найден `adb.exe`, установите Android platform-tools или задайте путь вручную:
+Если любой ADB bat-скрипт пишет, что не найден `adb.exe`, установите Android platform-tools или задайте путь вручную:
 
 ```bat
 set AIPONCHIK_ADB=C:\Android\platform-tools\adb.exe
