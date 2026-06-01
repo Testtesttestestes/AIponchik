@@ -77,6 +77,12 @@ python neural_game_parser.py --image test_images/Screenshot_2026-06-01-13-30-11-
 python neural_game_parser.py --adb --out run_outputs/neural_adb.json --overlay run_outputs/neural_adb_MOVE.jpg --show-overlay-window
 ```
 
+А для постоянного GUI-окна, аналогичного `scripts\run_adb_gui.bat`, запускайте:
+
+```bat
+scripts\run_adb_gui_neural.bat
+```
+
 Если модель лежит в другом месте или нужно изменить число кандидатов, задайте параметры явно:
 
 ```bash

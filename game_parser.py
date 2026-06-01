@@ -775,9 +775,10 @@ class RandomGameSimulator:
         "hard": {"move_bonus": -3, "target_scale": 1.15, "ice_scale": 1.25},
     }
 
-    def __init__(self, etalon_dir="etalon_images", config=None, pathfinder=None):
+    def __init__(self, etalon_dir="etalon_images", config=None, pathfinder=None, move_selector=None):
         self.etalon_dir = etalon_dir
         self.config = config or SimulationConfig()
+        self.move_selector = move_selector
         self.pathfinder = pathfinder or MovePathfinder(
             max_paths_per_item=DEFAULT_MAX_PATHS_PER_ITEM,
             search_depth=DEFAULT_SEARCH_DEPTH,
@@ -835,6 +836,9 @@ class RandomGameSimulator:
                 "seed": self.config.seed,
                 "etalonDir": self.etalon_dir,
                 "iceHits": self.config.ice_hits,
+                "ranker": "neuralPolicy" if self.move_selector else "heuristic",
+                "policyModel": getattr(self.move_selector, "model_path", None),
+                "policyCandidateLimit": getattr(self.move_selector, "candidates_per_move", None),
             },
             "summary": {
                 "games": games,
@@ -862,17 +866,16 @@ class RandomGameSimulator:
             if self._targets_done(targets_remaining):
                 break
             state = self._state_for_solver(board, ice_hp, targets_remaining, moves_limit - turn + 1, level)
-            moves = self.pathfinder.best_moves(state, limit=1)
-            if not moves:
+            path, move_data = self._select_move_for_state(state)
+            if not path:
                 errors.append(f"turn {turn}: no valid chain")
                 board, ice_hp = self._force_reseed_playable_area(board, ice_hp)
                 continue
-            move = moves[0]
-            collected = self._apply_move(board, ice_hp, move.path, targets_remaining)
+            collected = self._apply_move(board, ice_hp, path, targets_remaining)
             self._refill_board(board, ice_hp)
             turns.append({
                 "turn": turn,
-                "move": move.to_dict(),
+                "move": move_data,
                 "collected": collected,
                 "targetsRemaining": dict(targets_remaining),
             })
@@ -890,6 +893,21 @@ class RandomGameSimulator:
             turns=turns,
             errors=errors,
         )
+
+    def _select_move_for_state(self, state):
+        if self.move_selector is not None:
+            analyzed = self.move_selector.analyze(state, top=1)
+            move_data = analyzed.get("bestMove")
+            if not move_data:
+                return None, None
+            path = tuple((int(cell["row"]), int(cell["col"])) for cell in move_data.get("path", []))
+            return path, move_data
+
+        moves = self.pathfinder.best_moves(state, limit=1)
+        if not moves:
+            return None, None
+        move = moves[0]
+        return move.path, move.to_dict()
 
     def _moves_limit(self, template, modifiers):
         raw = template.get("gameState", {}).get("movesLeft")
@@ -2101,9 +2119,14 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
 
 def run_simulation(args):
     config = SimulationConfig(games=args.simulate_games, seed=args.simulate_seed)
-    simulator = RandomGameSimulator(etalon_dir=args.etalon_dir, config=config)
+    simulator = RandomGameSimulator(
+        etalon_dir=args.etalon_dir,
+        config=config,
+        move_selector=getattr(args, "move_selector", None),
+    )
     report = simulator.run_many(args.simulate_games)
-    out_path = args.out or os.path.join("run_outputs", "simulation_report.json")
+    default_name = "neural_simulation_report.json" if getattr(args, "move_selector", None) else "simulation_report.json"
+    out_path = args.out or os.path.join("run_outputs", default_name)
     write_json_result(report, out_path)
     summary = report["summary"]
     print(
