@@ -278,3 +278,44 @@ def test_adb_play_move_converts_board_path_to_swipe_segments():
     assert segments == 2
     assert calls[0] == ("input", "swipe", 10, 100, 20, 200, 77)
     assert calls[1] == ("input", "swipe", 20, 200, 30, 300, 77)
+
+
+def test_neural_policy_feature_encoder_has_stable_shape():
+    from game_parser import MoveCandidate
+    from neural_policy import FEATURE_NAMES, MoveFeatureEncoder
+
+    state = {
+        "gameState": {"movesLeft": "5", "targets": {"muffin": "0 / 6", "ice": "0 / 1"}},
+        "board": [["muffin_ice", "muffin", "muffin"], ["red", "red", "red"]],
+    }
+    move = MoveCandidate("muffin", ((0, 0), (0, 1), (0, 2)), 1.0, ())
+
+    features = MoveFeatureEncoder().encode(state, move)
+
+    assert features.shape == (len(FEATURE_NAMES),)
+    assert features[0] > 0
+
+
+def test_neural_policy_can_train_save_and_load_tiny_model(tmp_path):
+    from neural_policy import NeuralMovePolicy, PolicyDataset, TrainingConfig
+    import numpy as np
+
+    x = np.array([
+        [0.0, 0.0], [1.0, 1.0],
+        [0.2, 0.1], [0.9, 0.8],
+        [0.1, 0.3], [0.7, 0.9],
+    ], dtype=np.float32)
+    y = np.array([0.0, 1.0, 0.0, 1.0, 0.0, 1.0], dtype=np.float32)
+    state_ids = np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)
+    dataset = PolicyDataset(x=x, y=y, state_ids=state_ids, best_candidate_rows=np.array([1, 3, 5], dtype=np.int32))
+    config = TrainingConfig(epochs=8, hidden_units=4, learning_rate=0.01, dropout=0.0, patience=4)
+    model = NeuralMovePolicy(input_size=2, hidden_units=4, seed=2)
+
+    metrics = model.fit(dataset, dataset, config)
+    out_path = tmp_path / "policy.json"
+    model.save(str(out_path), metrics=metrics, config=config)
+    loaded = NeuralMovePolicy.load(str(out_path))
+
+    assert out_path.exists()
+    assert loaded.predict(np.array([[1.0, 1.0]], dtype=np.float32)).shape == (1,)
+    assert metrics["epochsRun"] >= 1
