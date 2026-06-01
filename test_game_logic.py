@@ -388,3 +388,42 @@ def test_policy_evaluation_reports_simulated_win_rate():
     assert report["games"] == 1
     assert "successRate" in report
     assert report["wins"] + report["losses"] == 1
+
+
+def test_bot_finishes_two_remaining_muffins_instead_of_long_non_targets():
+    board = [
+        ["muffin", "muffin", "donut", "donut", "donut", "donut", "donut"],
+        ["red", "red", "red", "red", "red", "red", "red"],
+        ["biscuit", "biscuit", "biscuit", "biscuit", "biscuit", "biscuit", "biscuit"],
+        ["chocolate", "chocolate", "chocolate", "chocolate", "chocolate", "chocolate", "chocolate"],
+        ["donut", "donut", "donut", "donut", "donut", "donut", "donut"],
+        ["red", "red", "red", "red", "red", "red", "red"],
+        ["biscuit", "biscuit", "biscuit", "biscuit", "biscuit", "biscuit", "biscuit"],
+    ]
+    state = {
+        "gameState": {"movesLeft": "30", "targets": {"muffin": "28 / 30"}},
+        "board": board,
+    }
+
+    move = MovePathfinder(max_paths_per_item=20, rollout_samples=0).best_moves(state, limit=1)[0]
+
+    assert move.item == "muffin"
+    assert move.length == 2
+
+
+def test_bot_ignores_completed_donuts_and_focuses_remaining_muffins():
+    board = [
+        ["donut", "donut", "donut", "donut", "donut"],
+        ["donut", "donut", "donut", "donut", "donut"],
+        ["muffin", "muffin", "muffin", "red", "red"],
+        ["biscuit", "biscuit", "biscuit", "red", "red"],
+    ]
+    state = {
+        "gameState": {"movesLeft": "20", "targets": {"donut": "20 / 20", "muffin": "10 / 20"}},
+        "board": board,
+    }
+
+    move = MovePathfinder(max_paths_per_item=20, rollout_samples=0).best_moves(state, limit=1)[0]
+
+    assert move.item == "muffin"
+    assert any("target muffin" in reason for reason in move.reasons)

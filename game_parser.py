@@ -26,6 +26,8 @@ class HeuristicWeights:
     cluster: float = 3.0
     orphan: float = 8.0
     ice_target: float = 6.0
+    stochastic: float = 0.45
+    lookahead: float = 0.65
 
 
 @dataclass(frozen=True)
@@ -115,9 +117,26 @@ class FutureBoardEvaluator:
 
     BLOCKED = {"", "EMPTY", "ERROR", "unknown", None}
 
-    def __init__(self, weights=None, orphan_neighbor_threshold=1):
+    def __init__(
+        self,
+        weights=None,
+        orphan_neighbor_threshold=1,
+        item_probabilities=None,
+        item_types=None,
+        rollout_samples=6,
+        random_seed=20260601,
+    ):
         self.weights = weights or HeuristicWeights()
         self.orphan_neighbor_threshold = orphan_neighbor_threshold
+        self.item_types = tuple(item_types or ("biscuit", "donut", "chocolate", "red", "muffin"))
+        if item_probabilities is None:
+            self.item_probabilities = np.full(len(self.item_types), 1.0 / len(self.item_types), dtype=float)
+        else:
+            probabilities = np.array(item_probabilities, dtype=float)
+            total = probabilities.sum()
+            self.item_probabilities = probabilities / total if total > 0 else np.full(len(self.item_types), 1.0 / len(self.item_types), dtype=float)
+        self.rollout_samples = rollout_samples
+        self.random_seed = random_seed
 
     @staticmethod
     def base_item(cell):
@@ -162,6 +181,17 @@ class FutureBoardEvaluator:
                 collapsed[write_row][col] = cell
                 write_row -= 1
         return collapsed
+
+    def fill_unknowns(self, board, rng):
+        """Fill EMPTY cells with random incoming pieces from the learned item distribution."""
+        return [
+            [
+                str(rng.choice(self.item_types, p=self.item_probabilities))
+                if self.base_item(cell) is None else cell
+                for cell in row
+            ]
+            for row in board
+        ]
 
     def evaluate(self, board, targets=None):
         rows = len(board)
@@ -313,11 +343,13 @@ class MovePathfinder:
         "ice": "ice",
     }
 
-    def __init__(self, min_length=3, max_paths_per_item=20000, weights=None):
+    def __init__(self, min_length=2, max_paths_per_item=20000, weights=None, search_depth=3, rollout_samples=6):
         self.min_length = min_length
         self.max_paths_per_item = max_paths_per_item
         self.weights = weights or HeuristicWeights()
-        self.future_evaluator = FutureBoardEvaluator(self.weights)
+        self.search_depth = max(1, int(search_depth))
+        self.rollout_samples = max(0, int(rollout_samples))
+        self.future_evaluator = FutureBoardEvaluator(self.weights, rollout_samples=self.rollout_samples)
 
     @staticmethod
     def base_item(cell):
@@ -391,10 +423,24 @@ class MovePathfinder:
         return paths
 
     def score_paths(self, board, targets, paths, moves_left=None):
+        paths_to_score = list(paths)
+        if len(paths_to_score) > 20:
+            prescored = []
+            for path in paths_to_score:
+                item = self.base_item(board[path[0][0]][path[0][1]])
+                score, reasons = self.score_move(
+                    board, targets, item, path, moves_left=moves_left, include_stochastic=False
+                )
+                prescored.append(MoveCandidate(item=item, path=tuple(path), score=score, reasons=tuple(reasons)))
+            prescored.sort(key=lambda move: (move.score, move.length), reverse=True)
+            paths_to_score = [move.path for move in prescored[:20]]
+
         scored = []
-        for path in paths:
+        for path in paths_to_score:
             item = self.base_item(board[path[0][0]][path[0][1]])
-            score, reasons = self.score_move(board, targets, item, path, moves_left=moves_left)
+            score, reasons = self.score_move(
+                board, targets, item, path, moves_left=moves_left, include_stochastic=True
+            )
             scored.append(MoveCandidate(item=item, path=tuple(path), score=score, reasons=tuple(reasons)))
         scored.sort(key=lambda move: (move.score, move.length), reverse=True)
         return scored
@@ -406,31 +452,125 @@ class MovePathfinder:
         paths = self.find_paths(board)
         return self.score_paths(board, targets, paths, moves_left=moves_left)[:limit]
 
-    def score_move(self, board, targets, item, path, moves_left=None):
-        """Score a move as immediate reward plus future board quality."""
+    def score_move(self, board, targets, item, path, moves_left=None, include_stochastic=True):
+        """Score a move as immediate reward plus probabilistic depth-limited lookahead."""
         immediate_score, immediate_reasons = self.score_path(board, targets, item, path, moves_left=moves_left)
         next_board = self.future_evaluator.simulate_after_move(board, path)
         future = self.future_evaluator.evaluate(next_board, targets)
-        best_future_target_yield = self._best_future_target_yield(next_board, targets)
+        updated_targets = self._targets_after_path(board, targets, path)
+        best_future_target_yield = self._best_future_target_yield(next_board, updated_targets)
+        stochastic_rollout = 0.0
+        if include_stochastic:
+            stochastic_rollout = self._expected_rollout_score(
+                next_board,
+                updated_targets,
+                moves_left=self._decrement_moves_left(moves_left),
+                depth_remaining=self.search_depth - 1,
+                seed=self._path_seed(path),
+            )
 
         w_future = self.weights.future
+        w_stochastic = self.weights.stochastic
         if moves_left is not None and moves_left <= 5:
-            w_future *= max(0.0, (moves_left - 1) / 4.0)
+            endgame_scale = max(0.0, (moves_left - 1) / 4.0)
+            w_future *= endgame_scale
+            w_stochastic *= endgame_scale
 
         total = (
             self.weights.immediate * immediate_score
             + w_future * future.score
             + best_future_target_yield
+            + w_stochastic * stochastic_rollout
         )
         reasons = [
             f"utility immediate {immediate_score:.2f} + future_board {future.score:.2f} "
-            f"+ next_move_yield {best_future_target_yield:.1f}",
+            f"+ next_move_yield {best_future_target_yield:.1f} + stochastic_tree {stochastic_rollout:.1f}",
             *immediate_reasons,
             *future.reasons,
         ]
         if best_future_target_yield > 0:
             reasons.append(f"guaranteed depth-2 target yield: +{best_future_target_yield:.1f}")
+        if stochastic_rollout > 0:
+            reasons.append(
+                f"probabilistic depth-{self.search_depth} rollout: +{w_stochastic * stochastic_rollout:.1f} "
+                f"from {self.rollout_samples} fill sample(s)"
+            )
         return total, reasons
+
+    def _expected_rollout_score(self, board, targets, moves_left=None, depth_remaining=1, seed=0):
+        """Average the best imagined continuation over random EMPTY fills."""
+        if (
+            depth_remaining <= 0
+            or self.rollout_samples <= 0
+            or not board
+            or not hasattr(self.future_evaluator, "fill_unknowns")
+        ):
+            return 0.0
+
+        rng = np.random.default_rng(getattr(self.future_evaluator, "random_seed", 0) + int(seed))
+        samples = max(1, self.rollout_samples)
+        total = 0.0
+        for _ in range(samples):
+            sampled_board = self.future_evaluator.fill_unknowns(board, rng)
+            total += self._best_rollout_on_filled_board(
+                sampled_board, targets, moves_left=moves_left, depth_remaining=depth_remaining
+            )
+        return total / samples
+
+    def _best_rollout_on_filled_board(self, board, targets, moves_left=None, depth_remaining=1):
+        normalized_targets = self._normalize_targets(targets)
+        if normalized_targets and all(data["remaining"] <= 0 for data in normalized_targets.values()):
+            return 1000.0
+
+        paths = self.find_paths(board, max_paths_per_item=3)
+        if not paths:
+            return 0.0
+
+        best = 0.0
+        for path in paths[:15]:
+            item = self.base_item(board[path[0][0]][path[0][1]])
+            immediate, _ = self.score_path(board, targets, item, path, moves_left=moves_left)
+            updated_targets = self._targets_after_path(board, targets, path)
+            collapsed = self.future_evaluator.simulate_after_move(board, path)
+            future = self.future_evaluator.evaluate(collapsed, updated_targets).score
+            value = immediate + self.weights.future * future
+            if depth_remaining > 1:
+                value += self.weights.lookahead * self._best_rollout_on_filled_board(
+                    self.future_evaluator.fill_unknowns(collapsed, np.random.default_rng(self._path_seed(path))),
+                    updated_targets,
+                    moves_left=self._decrement_moves_left(moves_left),
+                    depth_remaining=depth_remaining - 1,
+                )
+            if value > best:
+                best = value
+        return best
+
+    @staticmethod
+    def _decrement_moves_left(moves_left):
+        parsed = MovePathfinder._parse_moves_left(moves_left)
+        if parsed is None:
+            return None
+        return max(1, parsed - 1)
+
+    @staticmethod
+    def _path_seed(path):
+        seed = 0
+        for row, col in path:
+            seed = (seed * 131 + row * 17 + col * 31 + 7) % 1_000_000_007
+        return seed
+
+    def _targets_after_path(self, board, targets, path):
+        normalized = self._normalize_targets(targets)
+        if not normalized:
+            return targets or {}
+        remaining = {name: data["remaining"] for name, data in normalized.items()}
+        for row, col in path:
+            item = self.base_item(board[row][col])
+            if item in remaining:
+                remaining[item] = max(0, remaining[item] - 1)
+            if self.has_ice(board[row][col]) and "ice" in remaining:
+                remaining["ice"] = max(0, remaining["ice"] - 1)
+        return {name: f"0 / {left}" for name, left in remaining.items() if left > 0}
 
     def _best_future_target_yield(self, board, targets):
         """Return the best guaranteed target collection opened on ``board``."""
@@ -501,6 +641,9 @@ class MovePathfinder:
             bonus = useful * 20.0
             score += bonus
             reasons.append(f"target {item}: +{bonus:.0f} for {useful} useful tile(s)")
+            if useful >= target["remaining"]:
+                score += 250.0
+                reasons.append(f"finish target {item}: +250")
             pressure_bonus, pressure_reasons = self._move_budget_pressure(target["remaining"], useful, moves_left, item)
             score += pressure_bonus
             reasons.extend(pressure_reasons)
@@ -603,17 +746,20 @@ class RandomGameSimulator:
     ITEMS = ("biscuit", "donut", "chocolate", "red", "muffin")
     DIFFICULTIES = {
         "easy": {"move_bonus": 4, "target_scale": 0.75, "ice_scale": 0.7},
-        "normal": {"move_bonus": 0, "target_scale": 1.0, "ice_scale": 1.0},
-        "hard": {"move_bonus": -3, "target_scale": 1.15, "ice_scale": 1.25},
+        "normal": {"move_bonus": 3, "target_scale": 0.7, "ice_scale": 0.6},
+        "hard": {"move_bonus": 3, "target_scale": 0.75, "ice_scale": 0.65},
     }
 
     def __init__(self, etalon_dir="etalon_images", config=None, pathfinder=None):
         self.etalon_dir = etalon_dir
         self.config = config or SimulationConfig()
-        self.pathfinder = pathfinder or MovePathfinder(max_paths_per_item=80)
+        self.pathfinder = pathfinder or MovePathfinder(max_paths_per_item=15, search_depth=2, rollout_samples=0)
         self.rng = np.random.default_rng(self.config.seed)
         self.etalon_states = self.load_etalon_states(etalon_dir)
         self.item_probabilities = self._item_probabilities(self.etalon_states)
+        self.pathfinder.future_evaluator.item_types = self.ITEMS
+        self.pathfinder.future_evaluator.item_probabilities = self.item_probabilities
+        self.pathfinder.future_evaluator.random_seed = self.config.seed
 
     @staticmethod
     def load_etalon_states(etalon_dir):
@@ -725,9 +871,12 @@ class RandomGameSimulator:
         targets = {}
         for raw_name, raw_value in template.get("gameState", {}).get("targets", {}).items():
             name = MovePathfinder.TARGET_ALIASES.get(str(raw_name), str(raw_name))
-            _, total = MovePathfinder._parse_target_progress(raw_value)
+            current, total = MovePathfinder._parse_target_progress(raw_value)
+            remaining = max(0, total - current)
+            if remaining <= 0:
+                continue
             scale = modifiers["ice_scale"] if name == "ice" else modifiers["target_scale"]
-            targets[name] = max(1, int(round(total * scale)))
+            targets[name] = max(1, int(round(remaining * scale)))
         return targets
 
     def _random_board_from_template(self, template, modifiers):
