@@ -403,10 +403,20 @@ class SelfPlayDatasetBuilder:
 
         success = local_simulator._targets_done(targets_remaining)
         
-        # DISCARD LOSING GAMES
-        if not success:
-            return GameSampleBuffer([], [], [], [], state_id_counter, success)
+        # --- NEW RL LABELING LOGIC (MONTE CARLO REWARD) ---
+        # Награда: +1.0 за победу, -1.0 за поражение.
+        final_reward = 1.0 if success else -1.0
+        
+        # Ретроактивно обновляем метки для сыгранной партии
+        for i in range(len(game_labels)):
+            if game_labels[i] == 1.0:
+                # Ход, который мы реально сделали, получает исход игры
+                game_labels[i] = final_reward
+            # Невыбранные ходы остаются 0.0. 
+            # При победе (1.0): выбранный ход > невыбранных.
+            # При поражении (-1.0): выбранный ход < невыбранных!
 
+        # МЫ БОЛЬШЕ НЕ ВЫБРАСЫВАЕМ ПРОИГРЫШИ!
         return GameSampleBuffer(
             game_features, game_labels, game_state_ids, game_best_rows, state_id_counter, success
         )
