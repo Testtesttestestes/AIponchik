@@ -38,7 +38,7 @@ class TrainingConfig:
     candidates_per_state: int = 32
     epochs: int = 1
     hidden_units: int = 128
-    learning_rate: float = 1e-4  # Исправлено с 5e-6 на 1e-4 для реального обучения
+    learning_rate: float = 1e-4  
     l2: float = 0.0005
     dropout: float = 0.1
     patience: int = 10
@@ -46,7 +46,7 @@ class TrainingConfig:
     ice_hits: int = 3
     batch_size: int = 512
     epsilon: float = 0.15
-    gamma: float = 0.99  # Увеличено для длинного горизонта, предотвращает scale collapse
+    gamma: float = 0.99  
 
 @dataclass
 class PolicyDataset:
@@ -54,7 +54,7 @@ class PolicyDataset:
     y: np.ndarray
     state_ids: np.ndarray
     best_candidate_rows: np.ndarray
-    chosen_indices: np.ndarray = None # Для отслеживания энтропии эвристики
+    chosen_indices: np.ndarray = None 
 
     @property
     def size(self):
@@ -161,12 +161,11 @@ class NeuralMovePolicy:
 
     def fit(self, train: PolicyDataset, config: TrainingConfig):
         if train.size == 0:
-            return {"epochsRun": 0, "trainLoss": float("inf"), "total_grad_norm": 0.0}
+            return {"epochsRun": 0, "trainLoss": float("inf"), "mean_grad_norm": 0.0, "max_grad_norm": 0.0}
 
         x_train = torch.tensor(train.x, dtype=torch.float32, device=self.device)
         y_train = torch.tensor(train.y, dtype=torch.float32, device=self.device)
         
-        # FROZEN NORMALIZATION: Измеряем только один раз
         if not self.is_normalized and torch.all(self.mean == 0.0):
             self.mean = x_train.mean(dim=0)
             self.std = torch.clamp(x_train.std(dim=0), min=1e-4)
@@ -176,7 +175,6 @@ class NeuralMovePolicy:
         train_loader = DataLoader(TensorDataset(x_train, y_train), batch_size=config.batch_size, shuffle=True)
 
         optimizer = optim.AdamW(self.model.parameters(), lr=config.learning_rate, weight_decay=config.l2)
-        # Huber Loss для борьбы с взрывами градиентов
         criterion = nn.SmoothL1Loss(beta=0.2)
 
         self.model.train()
@@ -192,7 +190,6 @@ class NeuralMovePolicy:
                 loss = criterion(pred, batch_y)
                 loss.backward()
                 
-                # ИНСТРУМЕНТИРОВАНИЕ: Считаем нормы градиентов
                 batch_norm = 0.0
                 for p in self.model.parameters():
                     if p.grad is not None:
@@ -262,8 +259,11 @@ class SelfPlayDatasetBuilder:
         local_model = None
         if self.model_payload:
             local_model = NeuralMovePolicy.from_dict(self.model_payload)
+            # ФИКС: Переносим не только модель, но и тензоры нормализации на CPU
             local_model.device = torch.device("cpu")
             local_model.model.to("cpu")
+            local_model.mean = local_model.mean.to("cpu")
+            local_model.std = local_model.std.to("cpu")
             local_model.model.eval()
 
         game_features, game_labels, game_state_ids, game_chosen_idx = [], [], [], []
@@ -294,11 +294,10 @@ class SelfPlayDatasetBuilder:
                 chosen_idx = int(np.argmax(local_model.predict(features)))
                 chosen_move = selected[chosen_idx]
 
-            # ТОЛЬКО ВЫБРАННОЕ ДЕЙСТВИЕ
             game_features.append(local_encoder.encode(state, chosen_move))
             game_labels.append(0.0) 
             game_state_ids.append(state_id_counter)
-            game_chosen_idx.append(chosen_idx) # Логируем для энтропии
+            game_chosen_idx.append(chosen_idx)
             state_id_counter += 1
 
             local_simulator._apply_move(board, ice_hp, chosen_move.path, targets_remaining)
@@ -306,7 +305,6 @@ class SelfPlayDatasetBuilder:
 
         success = local_simulator._targets_done(targets_remaining)
         
-        # ДИСКОНТИРОВАНИЕ (Monte-Carlo returns with High Gamma)
         final_reward = 1.0 if success else -1.0
         steps = len(game_labels)
         for i in range(steps):
@@ -332,8 +330,9 @@ class SelfPlayDatasetBuilder:
                         all_features.extend(game.features)
                         all_labels.extend(game.labels)
                         all_chosen.extend(game.chosen_indices)
-                except Exception:
-                    pass
+                except Exception as e:
+                    # ФИКС: Выводим ошибку, а не скрываем ее
+                    print(f"Worker Error in Self-Play: {e}")
 
         ds = PolicyDataset(
             x=np.vstack(all_features).astype(np.float32) if all_features else np.empty((0, len(FEATURE_NAMES))),

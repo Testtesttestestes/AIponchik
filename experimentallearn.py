@@ -21,7 +21,9 @@ def spearman_rank_correlation(a, b):
 def print_tf_style(prefix, current, total, metrics_dict):
     """Simulates dense Keras/TensorFlow logging format."""
     bar_len = 30
-    filled = int(round(bar_len * current / float(total)))
+    # ЗАЩИТА ОТ ДЕЛЕНИЯ НА НОЛЬ при пустом датасете
+    safe_total = max(1, total) 
+    filled = int(round(bar_len * current / float(safe_total)))
     bar = '=' * filled + '-' * (bar_len - filled)
     metrics_str = " - ".join([f"{k}: {v}" for k, v in metrics_dict.items()])
     print(f"{prefix} {current}/{total} [{bar}] - {metrics_str}")
@@ -56,20 +58,17 @@ def main():
     else:
         model = NeuralMovePolicy(len(FEATURE_NAMES), hidden_units=128, seed=config.seed)
 
-    # 1. ПОЛИТИКИ ДЛЯ РАЗНООБРАЗИЯ
     generator_pool = deque(maxlen=5)
     generator_pool.append(model.to_dict())
     
-    # 2. СКОЛЬЗЯЩЕЕ ОКНО БУФЕРА (около 4-х генераций)
     max_steps_estimate = args.games_per_gen * 4 * 35 
     replay_x = deque(maxlen=max_steps_estimate)
     replay_y = deque(maxlen=max_steps_estimate)
     
     builder = SelfPlayDatasetBuilder(etalon_dir=args.etalon_dir, config=config)
 
-    # 3. ИСТИННО ЗАМОРОЖЕННЫЙ БЕНЧМАРК (Генерируем один раз, храним признаки)
     print("\n[INSTRUMENTATION] Building FROZEN Benchmark Set (50 games)...")
-    builder.set_model(model) # Используем стартовую модель для начального распределения
+    builder.set_model(model) 
     benchmark_data = builder.build(50, seed_offset=9999)
     frozen_benchmark_x = benchmark_data.x
     prev_predictions = model.predict(frozen_benchmark_x) if frozen_benchmark_x.size > 0 else np.array([])
@@ -86,13 +85,11 @@ def main():
         
         print(f"\n🧬 GEN {gen}/{args.generations} | Expl_ε: {eps:.2f} | Pool: {len(generator_pool)} | Buffer: {len(replay_x)}")
         
-        # Frozen Opponent Generator 
         builder.set_model(NeuralMovePolicy.from_dict(random.choice(generator_pool)))
         
         print("[DATA] Generative Phase (Self-Play)...")
         train_data = builder.build(config.train_games, seed_offset=gen * 100_000)
         
-        # Инструментирование: Энтропия эвристик (считаем Action Entropy)
         heuristic_entropy = 0.0
         if train_data.size > 0 and train_data.chosen_indices is not None:
             counts = np.bincount(train_data.chosen_indices)
@@ -105,10 +102,8 @@ def main():
             "unique_states": f"{train_data.size}"
         })
 
-        # BASELINE NORMALIZATION и Buffer Update
         if train_data.size > 0:
             y_raw = np.array(train_data.y, dtype=np.float32)
-            # Нормализация внутри генерации дает локальный Baseline (0 mean, 1 std)
             y_norm = (y_raw - np.mean(y_raw)) / (np.std(y_raw) + 1e-8) 
             replay_x.extend(train_data.x)
             replay_y.extend(y_norm)
@@ -120,14 +115,12 @@ def main():
         print("[TRAIN] Optimizing Policy...")
         metrics = model.fit(buffer_data, builder.config)
         
-        # Вывод обучения с нормами градиентов
         print_tf_style("      ", buffer_data.size, buffer_data.size, {
             "loss": f"{metrics.get('trainLoss', 0):.5f}",
             "grad_norm_mean": f"{metrics.get('mean_grad_norm', 0):.4f}",
             "grad_norm_max": f"{metrics.get('max_grad_norm', 0):.4f}"
         })
         
-        # Инструментирование: Prediction Drift на FROZEN dataset
         if frozen_benchmark_x.size > 0:
             new_predictions = model.predict(frozen_benchmark_x)
             rank_corr = spearman_rank_correlation(prev_predictions, new_predictions)
@@ -138,7 +131,6 @@ def main():
             })
             prev_predictions = new_predictions
 
-        # Оценка и Чекпоинт
         print("[EVAL] Validation Phase...")
         win_rate = evaluate_policy_games(model, games=50, etalon_dir=args.etalon_dir, candidates=args.candidates)
         print_tf_style("      ", 50, 50, {"win_rate": f"{win_rate}%"})
@@ -148,7 +140,6 @@ def main():
             model.save(args.out)
             print(f"🔥 [CHECKPOINT] New best policy saved! (Best: {best_winrate}%)")
             
-        # РАЗНООБРАЗИЕ ПУЛА: Добавляем модель в пул регулярно, а не только лучшую
         if gen % 2 == 0:
             generator_pool.append(model.to_dict())
             print(f"🔄 [DIVERSITY] Current policy added to generator pool.")
