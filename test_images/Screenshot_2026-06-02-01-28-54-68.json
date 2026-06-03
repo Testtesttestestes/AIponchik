@@ -1,0 +1,415 @@
+{
+    "gameState": {
+        "movesLeft": "25",
+        "level": "17",
+        "targets": {
+            "muffin": "9 / 27",
+            "biscuit": "19 / 26"
+        }
+    },
+    "board": [
+        [
+            "chocolate",
+            "muffin",
+            "donut_ice",
+            "chocolate",
+            "biscuit",
+            "red",
+            "chocolate"
+        ],
+        [
+            "red",
+            "chocolate",
+            "biscuit",
+            "chocolate",
+            "red",
+            "muffin",
+            "red"
+        ],
+        [
+            "red",
+            "EMPTY",
+            "chocolate",
+            "donut_ice",
+            "donut_ice",
+            "EMPTY",
+            "chocolate"
+        ],
+        [
+            "muffin",
+            "chocolate",
+            "muffin_ice",
+            "muffin_ice",
+            "biscuit_ice",
+            "red",
+            "muffin"
+        ],
+        [
+            "muffin",
+            "EMPTY",
+            "red_ice",
+            "red_ice",
+            "muffin_ice",
+            "EMPTY",
+            "red"
+        ],
+        [
+            "red",
+            "chocolate",
+            "biscuit",
+            "red",
+            "chocolate",
+            "red",
+            "donut_ice"
+        ],
+        [
+            "red",
+            "red",
+            "muffin",
+            "muffin",
+            "donut_ice",
+            "chocolate",
+            "red"
+        ]
+    ],
+    "analysis": {
+        "validChains": 36,
+        "movesLeftParsed": 25,
+        "bestMoves": [
+            {
+                "item": "muffin",
+                "length": 2,
+                "score": 103.96,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 0
+                    },
+                    {
+                        "row": 4,
+                        "col": 0
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 57.12 + future_board -180.49 + next_move_yield 90.0 + stochastic_tree 44.5",
+                    "base length 2",
+                    "target muffin: +40 for 2 useful tile(s)",
+                    "move budget muffin: +12 (18 left / 25 moves = 0.7 per move)",
+                    "move budget muffin: on pace +4",
+                    "future clusters: 18 group(s), weighted avg 3.84",
+                    "future orphans: -24",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +90.0",
+                    "probabilistic depth-2 rollout: +20.0 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 4,
+                "score": 88.92,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 9.00 + future_board -173.68 + next_move_yield 120.0 + stochastic_tree 46.0",
+                    "base length 4",
+                    "medium chain bonus +5",
+                    "future clusters: 19 group(s), weighted avg 3.44",
+                    "future orphans: -23",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +120.0",
+                    "probabilistic depth-2 rollout: +20.7 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 2,
+                "score": 77.25,
+                "path": [
+                    {
+                        "row": 6,
+                        "col": 2
+                    },
+                    {
+                        "row": 6,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 57.12 + future_board -189.33 + next_move_yield 75.0 + stochastic_tree 25.3",
+                    "base length 2",
+                    "target muffin: +40 for 2 useful tile(s)",
+                    "move budget muffin: +12 (18 left / 25 moves = 0.7 per move)",
+                    "move budget muffin: on pace +4",
+                    "future clusters: 19 group(s), weighted avg 3.56",
+                    "future orphans: -25",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +11.4 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 3,
+                "score": 76.72,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 3.00 + future_board -181.86 + next_move_yield 120.0 + stochastic_tree 38.6",
+                    "base length 3",
+                    "future clusters: 20 group(s), weighted avg 3.38",
+                    "future orphans: -24",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +120.0",
+                    "probabilistic depth-2 rollout: +17.4 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 5,
+                "score": 72.96,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 0,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 10.00 + future_board -165.50 + next_move_yield 105.0 + stochastic_tree 35.3",
+                    "base length 5",
+                    "medium chain bonus +5",
+                    "future clusters: 18 group(s), weighted avg 3.50",
+                    "future orphans: -22",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +15.9 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 4,
+                "score": 72.31,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 9.00 + future_board -173.68 + next_move_yield 105.0 + stochastic_tree 42.4",
+                    "base length 4",
+                    "medium chain bonus +5",
+                    "future clusters: 19 group(s), weighted avg 3.44",
+                    "future orphans: -23",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +19.1 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 4,
+                "score": 71.63,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 3
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 9.00 + future_board -173.68 + next_move_yield 105.0 + stochastic_tree 40.9",
+                    "base length 4",
+                    "medium chain bonus +5",
+                    "future clusters: 19 group(s), weighted avg 3.44",
+                    "future orphans: -23",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +18.4 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 4,
+                "score": 68.25,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 3
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 9.00 + future_board -173.68 + next_move_yield 105.0 + stochastic_tree 33.4",
+                    "base length 4",
+                    "medium chain bonus +5",
+                    "future clusters: 19 group(s), weighted avg 3.44",
+                    "future orphans: -23",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +15.0 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 2,
+                "score": 62.92,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 0
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 2.00 + future_board -171.65 + next_move_yield 105.0 + stochastic_tree 35.6",
+                    "base length 2",
+                    "future clusters: 18 group(s), weighted avg 4.12",
+                    "future orphans: -23",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +16.0 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 3,
+                "score": 62.57,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 83.88 + future_board -207.57 + next_move_yield 45.0 + stochastic_tree 14.1",
+                    "base length 3",
+                    "target muffin: +60 for 3 useful tile(s)",
+                    "move budget muffin: +17 (18 left / 25 moves = 0.7 per move)",
+                    "move budget muffin: on pace +4",
+                    "future clusters: 21 group(s), weighted avg 2.81",
+                    "future orphans: -27",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +45.0",
+                    "probabilistic depth-2 rollout: +6.3 from 12 fill sample(s)"
+                ]
+            }
+        ],
+        "ranker": "heuristic"
+    },
+    "bestMove": {
+        "item": "muffin",
+        "length": 2,
+        "score": 103.96,
+        "path": [
+            {
+                "row": 3,
+                "col": 0
+            },
+            {
+                "row": 4,
+                "col": 0
+            }
+        ],
+        "reasons": [
+            "utility immediate 57.12 + future_board -180.49 + next_move_yield 90.0 + stochastic_tree 44.5",
+            "base length 2",
+            "target muffin: +40 for 2 useful tile(s)",
+            "move budget muffin: +12 (18 left / 25 moves = 0.7 per move)",
+            "move budget muffin: on pace +4",
+            "future clusters: 18 group(s), weighted avg 3.84",
+            "future orphans: -24",
+            "future ice targets: +0.0",
+            "guaranteed depth-2 target yield: +90.0",
+            "probabilistic depth-2 rollout: +20.0 from 12 fill sample(s)"
+        ]
+    }
+}

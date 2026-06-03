@@ -71,5 +71,516 @@
             "chocolate",
             "donut"
         ]
-    ]
+    ],
+    "analysis": {
+        "validChains": 47,
+        "movesLeftParsed": 23,
+        "bestMoves": [
+            {
+                "item": "donut",
+                "length": 8,
+                "score": 327.66,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 258.00 + future_board -213.68 + next_move_yield 135.0 + stochastic_tree 21.0",
+                    "base length 8",
+                    "target donut: +160 for 8 useful tile(s)",
+                    "move budget donut: +72 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 3.44",
+                    "future orphans: -28",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +9.4 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 7,
+                "score": 296.8,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 227.96 + future_board -221.86 + next_move_yield 135.0 + stochastic_tree 25.5",
+                    "base length 7",
+                    "target donut: +140 for 7 useful tile(s)",
+                    "move budget donut: +63 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 24 group(s), weighted avg 3.38",
+                    "future orphans: -29",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +11.5 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 7,
+                "score": 295.64,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    },
+                    {
+                        "row": 6,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 227.96 + future_board -227.14 + next_move_yield 135.0 + stochastic_tree 27.1",
+                    "base length 7",
+                    "target donut: +140 for 7 useful tile(s)",
+                    "move budget donut: +63 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 4.29",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +12.2 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 7,
+                "score": 272.81,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 227.96 + future_board -246.14 + next_move_yield 120.0 + stochastic_tree 24.4",
+                    "base length 7",
+                    "target donut: +140 for 7 useful tile(s)",
+                    "move budget donut: +63 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 25 group(s), weighted avg 3.29",
+                    "future orphans: -32",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +120.0",
+                    "probabilistic depth-2 rollout: +11.0 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 7,
+                "score": 269.08,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 227.96 + future_board -246.14 + next_move_yield 120.0 + stochastic_tree 16.2",
+                    "base length 7",
+                    "target donut: +140 for 7 useful tile(s)",
+                    "move budget donut: +63 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 25 group(s), weighted avg 3.29",
+                    "future orphans: -32",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +120.0",
+                    "probabilistic depth-2 rollout: +7.3 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 5,
+                "score": 265.78,
+                "path": [
+                    {
+                        "row": 4,
+                        "col": 5
+                    },
+                    {
+                        "row": 5,
+                        "col": 5
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 147.17 + future_board -207.77 + next_move_yield 165.0 + stochastic_tree 58.5",
+                    "base length 5",
+                    "target biscuit: +100 for 5 useful tile(s)",
+                    "move budget biscuit: +33 (19 left / 23 moves = 0.8 per move)",
+                    "move budget biscuit: on pace +4",
+                    "medium chain bonus +5",
+                    "future clusters: 22 group(s), weighted avg 5.41",
+                    "future orphans: -28",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +165.0",
+                    "probabilistic depth-2 rollout: +26.3 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 6,
+                "score": 255.58,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 197.91 + future_board -243.65 + next_move_yield 135.0 + stochastic_tree 17.7",
+                    "base length 6",
+                    "target donut: +120 for 6 useful tile(s)",
+                    "move budget donut: +54 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 4.12",
+                    "future orphans: -32",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +7.9 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 6,
+                "score": 251.93,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 197.91 + future_board -253.05 + next_move_yield 135.0 + stochastic_tree 16.9",
+                    "base length 6",
+                    "target donut: +120 for 6 useful tile(s)",
+                    "move budget donut: +54 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 24 group(s), weighted avg 3.65",
+                    "future orphans: -33",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +7.6 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 6,
+                "score": 251.16,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 0
+                    },
+                    {
+                        "row": 1,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 197.91 + future_board -253.05 + next_move_yield 135.0 + stochastic_tree 15.1",
+                    "base length 6",
+                    "target donut: +120 for 6 useful tile(s)",
+                    "move budget donut: +54 (26 left / 23 moves = 1.1 per move)",
+                    "move budget donut: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 24 group(s), weighted avg 3.65",
+                    "future orphans: -33",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +6.8 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 4,
+                "score": 237.79,
+                "path": [
+                    {
+                        "row": 4,
+                        "col": 5
+                    },
+                    {
+                        "row": 5,
+                        "col": 5
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 119.57 + future_board -208.07 + next_move_yield 165.0 + stochastic_tree 57.9",
+                    "base length 4",
+                    "target biscuit: +80 for 4 useful tile(s)",
+                    "move budget biscuit: +26 (19 left / 23 moves = 0.8 per move)",
+                    "move budget biscuit: on pace +4",
+                    "medium chain bonus +5",
+                    "future clusters: 23 group(s), weighted avg 5.31",
+                    "future orphans: -28",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +165.0",
+                    "probabilistic depth-2 rollout: +26.0 from 12 fill sample(s)"
+                ]
+            }
+        ],
+        "ranker": "heuristic"
+    },
+    "bestMove": {
+        "item": "donut",
+        "length": 8,
+        "score": 327.66,
+        "path": [
+            {
+                "row": 0,
+                "col": 0
+            },
+            {
+                "row": 1,
+                "col": 1
+            },
+            {
+                "row": 2,
+                "col": 1
+            },
+            {
+                "row": 3,
+                "col": 1
+            },
+            {
+                "row": 4,
+                "col": 2
+            },
+            {
+                "row": 3,
+                "col": 3
+            },
+            {
+                "row": 4,
+                "col": 3
+            },
+            {
+                "row": 5,
+                "col": 4
+            }
+        ],
+        "reasons": [
+            "utility immediate 258.00 + future_board -213.68 + next_move_yield 135.0 + stochastic_tree 21.0",
+            "base length 8",
+            "target donut: +160 for 8 useful tile(s)",
+            "move budget donut: +72 (26 left / 23 moves = 1.1 per move)",
+            "move budget donut: on pace +6",
+            "long chain bonus +12",
+            "future clusters: 23 group(s), weighted avg 3.44",
+            "future orphans: -28",
+            "future ice targets: +0.0",
+            "guaranteed depth-2 target yield: +135.0",
+            "probabilistic depth-2 rollout: +9.4 from 12 fill sample(s)"
+        ]
+    }
 }

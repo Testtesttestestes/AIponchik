@@ -74,12 +74,13 @@
         ]
     ],
     "analysis": {
-        "validChains": 76,
+        "validChains": 39,
+        "movesLeftParsed": null,
         "bestMoves": [
             {
                 "item": "biscuit",
                 "length": 4,
-                "score": 5.9,
+                "score": 41.81,
                 "path": [
                     {
                         "row": 2,
@@ -99,19 +100,74 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 89.00 + 0.35*future -237.43",
+                    "utility immediate 89.00 + future_board -237.43 + next_move_yield 30.0 + stochastic_tree 13.1",
                     "base length 4",
                     "target biscuit: +80 for 4 useful tile(s)",
                     "medium chain bonus +5",
                     "future clusters: 25 group(s), weighted avg 3.52",
                     "future orphans: -31",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +30.0",
+                    "probabilistic depth-2 rollout: +5.9 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "biscuit",
+                "length": 2,
+                "score": 24.17,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 42.00 + future_board -229.09 + next_move_yield 60.0 + stochastic_tree 5.2",
+                    "base length 2",
+                    "target biscuit: +40 for 2 useful tile(s)",
+                    "future clusters: 25 group(s), weighted avg 3.64",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +2.3 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
                 "length": 3,
-                "score": -20.36,
+                "score": 22.26,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 0,
+                        "col": 5
+                    },
+                    {
+                        "row": 1,
+                        "col": 6
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 3.00 + future_board -211.93 + next_move_yield 90.0 + stochastic_tree 7.6",
+                    "base length 3",
+                    "future clusters: 23 group(s), weighted avg 4.02",
+                    "future orphans: -28",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +90.0",
+                    "probabilistic depth-2 rollout: +3.4 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 2,
+                "score": 21.15,
                 "path": [
                     {
                         "row": 2,
@@ -120,99 +176,23 @@
                     {
                         "row": 3,
                         "col": 6
-                    },
-                    {
-                        "row": 4,
-                        "col": 5
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 63.00 + 0.35*future -238.16",
-                    "base length 3",
-                    "target biscuit: +60 for 3 useful tile(s)",
-                    "future clusters: 25 group(s), weighted avg 3.28",
+                    "utility immediate 42.00 + future_board -238.05 + next_move_yield 60.0 + stochastic_tree 5.5",
+                    "base length 2",
+                    "target biscuit: +40 for 2 useful tile(s)",
+                    "future clusters: 26 group(s), weighted avg 3.32",
                     "future orphans: -31",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "biscuit",
-                "length": 3,
-                "score": -20.41,
-                "path": [
-                    {
-                        "row": 3,
-                        "col": 6
-                    },
-                    {
-                        "row": 4,
-                        "col": 5
-                    },
-                    {
-                        "row": 5,
-                        "col": 6
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 63.00 + 0.35*future -238.30",
-                    "base length 3",
-                    "target biscuit: +60 for 3 useful tile(s)",
-                    "future clusters: 26 group(s), weighted avg 3.23",
-                    "future orphans: -31",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "red",
-                "length": 8,
-                "score": -55.14,
-                "path": [
-                    {
-                        "row": 3,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 4
-                    },
-                    {
-                        "row": 6,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 2
-                    },
-                    {
-                        "row": 5,
-                        "col": 1
-                    },
-                    {
-                        "row": 4,
-                        "col": 0
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 20.00 + 0.35*future -214.68",
-                    "base length 8",
-                    "long chain bonus +12",
-                    "future clusters: 23 group(s), weighted avg 3.11",
-                    "future orphans: -28",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +2.5 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "red",
                 "length": 7,
-                "score": -56.09,
+                "score": 18.91,
                 "path": [
                     {
                         "row": 3,
@@ -244,61 +224,20 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 19.00 + 0.35*future -214.54",
+                    "utility immediate 19.00 + future_board -214.54 + next_move_yield 75.0 + stochastic_tree 0.0",
                     "base length 7",
                     "long chain bonus +12",
                     "future clusters: 23 group(s), weighted avg 3.15",
                     "future orphans: -28",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "red",
-                "length": 7,
-                "score": -56.14,
-                "path": [
-                    {
-                        "row": 4,
-                        "col": 0
-                    },
-                    {
-                        "row": 5,
-                        "col": 1
-                    },
-                    {
-                        "row": 6,
-                        "col": 2
-                    },
-                    {
-                        "row": 6,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 19.00 + 0.35*future -214.69",
-                    "base length 7",
-                    "long chain bonus +12",
-                    "future clusters: 24 group(s), weighted avg 3.10",
-                    "future orphans: -28",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +0.0 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "red",
                 "length": 6,
-                "score": -57.04,
+                "score": 18.87,
                 "path": [
                     {
                         "row": 3,
@@ -326,26 +265,60 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 18.00 + 0.35*future -214.40",
+                    "utility immediate 18.00 + future_board -214.40 + next_move_yield 75.0 + stochastic_tree 2.0",
                     "base length 6",
                     "long chain bonus +12",
                     "future clusters: 23 group(s), weighted avg 3.20",
                     "future orphans: -28",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +0.9 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 2,
+                "score": 16.79,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 5
+                    },
+                    {
+                        "row": 1,
+                        "col": 6
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 2.00 + future_board -220.14 + next_move_yield 90.0 + stochastic_tree 4.1",
+                    "base length 2",
+                    "future clusters: 24 group(s), weighted avg 3.95",
+                    "future orphans: -29",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +90.0",
+                    "probabilistic depth-2 rollout: +1.8 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "red",
                 "length": 6,
-                "score": -57.04,
+                "score": 15.59,
                 "path": [
                     {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
                         "row": 4,
-                        "col": 0
+                        "col": 4
                     },
                     {
                         "row": 5,
-                        "col": 1
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 3
                     },
                     {
                         "row": 6,
@@ -353,7 +326,81 @@
                     },
                     {
                         "row": 5,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 18.00 + future_board -222.70 + next_move_yield 75.0 + stochastic_tree 1.2",
+                    "base length 6",
+                    "long chain bonus +12",
+                    "future clusters: 24 group(s), weighted avg 3.10",
+                    "future orphans: -29",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +0.5 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 6,
+                "score": 12.82,
+                "path": [
+                    {
+                        "row": 3,
                         "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    },
+                    {
+                        "row": 6,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 18.00 + future_board -230.70 + next_move_yield 75.0 + stochastic_tree 1.2",
+                    "base length 6",
+                    "long chain bonus +12",
+                    "future clusters: 23 group(s), weighted avg 3.10",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +0.6 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "red",
+                "length": 6,
+                "score": 12.47,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
                     },
                     {
                         "row": 6,
@@ -365,98 +412,23 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 18.00 + 0.35*future -214.40",
+                    "utility immediate 18.00 + future_board -230.70 + next_move_yield 75.0 + stochastic_tree 0.5",
                     "base length 6",
                     "long chain bonus +12",
-                    "future clusters: 23 group(s), weighted avg 3.20",
-                    "future orphans: -28",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "red",
-                "length": 6,
-                "score": -57.04,
-                "path": [
-                    {
-                        "row": 4,
-                        "col": 0
-                    },
-                    {
-                        "row": 5,
-                        "col": 1
-                    },
-                    {
-                        "row": 6,
-                        "col": 2
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 4
-                    },
-                    {
-                        "row": 6,
-                        "col": 3
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 18.00 + 0.35*future -214.40",
-                    "base length 6",
-                    "long chain bonus +12",
-                    "future clusters: 23 group(s), weighted avg 3.20",
-                    "future orphans: -28",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "red",
-                "length": 6,
-                "score": -57.04,
-                "path": [
-                    {
-                        "row": 4,
-                        "col": 0
-                    },
-                    {
-                        "row": 5,
-                        "col": 1
-                    },
-                    {
-                        "row": 6,
-                        "col": 2
-                    },
-                    {
-                        "row": 6,
-                        "col": 3
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 18.00 + 0.35*future -214.40",
-                    "base length 6",
-                    "long chain bonus +12",
-                    "future clusters: 23 group(s), weighted avg 3.20",
-                    "future orphans: -28",
-                    "future ice targets: +0.0"
+                    "future clusters: 23 group(s), weighted avg 3.10",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +0.2 from 12 fill sample(s)"
                 ]
             }
-        ]
+        ],
+        "ranker": "heuristic"
     },
     "bestMove": {
         "item": "biscuit",
         "length": 4,
-        "score": 5.9,
+        "score": 41.81,
         "path": [
             {
                 "row": 2,
@@ -476,13 +448,15 @@
             }
         ],
         "reasons": [
-            "utility 1.00*immediate 89.00 + 0.35*future -237.43",
+            "utility immediate 89.00 + future_board -237.43 + next_move_yield 30.0 + stochastic_tree 13.1",
             "base length 4",
             "target biscuit: +80 for 4 useful tile(s)",
             "medium chain bonus +5",
             "future clusters: 25 group(s), weighted avg 3.52",
             "future orphans: -31",
-            "future ice targets: +0.0"
+            "future ice targets: +0.0",
+            "guaranteed depth-2 target yield: +30.0",
+            "probabilistic depth-2 rollout: +5.9 from 12 fill sample(s)"
         ]
     }
 }

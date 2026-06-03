@@ -72,5 +72,627 @@
             "chocolate",
             "chocolate"
         ]
-    ]
+    ],
+    "analysis": {
+        "validChains": 31,
+        "movesLeftParsed": 22,
+        "bestMoves": [
+            {
+                "item": "chocolate",
+                "length": 11,
+                "score": 408.87,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    },
+                    {
+                        "row": 6,
+                        "col": 0
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 402.91 + future_board -155.83 + next_move_yield 42.0 + stochastic_tree 41.1",
+                    "base length 11",
+                    "target chocolate: +220 for 11 useful tile(s)",
+                    "move budget chocolate: +100 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +45 for 3 iced tile(s)",
+                    "move budget ice: +8 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 17 group(s), weighted avg 6.39",
+                    "future orphans: -23",
+                    "future ice targets: +1.5",
+                    "guaranteed depth-2 target yield: +42.0",
+                    "probabilistic depth-2 rollout: +18.5 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 10,
+                "score": 368.07,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 372.82 + future_board -174.38 + next_move_yield 42.0 + stochastic_tree 31.7",
+                    "base length 10",
+                    "target chocolate: +200 for 10 useful tile(s)",
+                    "move budget chocolate: +91 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +45 for 3 iced tile(s)",
+                    "move budget ice: +8 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 19 group(s), weighted avg 5.54",
+                    "future orphans: -25",
+                    "future ice targets: +1.5",
+                    "guaranteed depth-2 target yield: +42.0",
+                    "probabilistic depth-2 rollout: +14.3 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 9,
+                "score": 319.14,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 325.18 + future_board -176.03 + next_move_yield 42.0 + stochastic_tree 30.2",
+                    "base length 9",
+                    "target chocolate: +180 for 9 useful tile(s)",
+                    "move budget chocolate: +82 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +30 for 2 iced tile(s)",
+                    "move budget ice: +5 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 18 group(s), weighted avg 6.16",
+                    "future orphans: -26",
+                    "future ice targets: +2.2",
+                    "guaranteed depth-2 target yield: +42.0",
+                    "probabilistic depth-2 rollout: +13.6 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 9,
+                "score": 317.87,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 325.18 + future_board -196.42 + next_move_yield 42.0 + stochastic_tree 43.2",
+                    "base length 9",
+                    "target chocolate: +180 for 9 useful tile(s)",
+                    "move budget chocolate: +82 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +30 for 2 iced tile(s)",
+                    "move budget ice: +5 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 3.53",
+                    "future orphans: -27",
+                    "future ice targets: +1.5",
+                    "guaranteed depth-2 target yield: +42.0",
+                    "probabilistic depth-2 rollout: +19.4 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 8,
+                "score": 310.35,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 295.09 + future_board -168.62 + next_move_yield 57.0 + stochastic_tree 38.4",
+                    "base length 8",
+                    "target chocolate: +160 for 8 useful tile(s)",
+                    "move budget chocolate: +73 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +30 for 2 iced tile(s)",
+                    "move budget ice: +5 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 18 group(s), weighted avg 6.13",
+                    "future orphans: -26",
+                    "future ice targets: +3.5",
+                    "guaranteed depth-2 target yield: +57.0",
+                    "probabilistic depth-2 rollout: +17.3 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 8,
+                "score": 309.16,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 295.09 + future_board -168.62 + next_move_yield 57.0 + stochastic_tree 35.7",
+                    "base length 8",
+                    "target chocolate: +160 for 8 useful tile(s)",
+                    "move budget chocolate: +73 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +30 for 2 iced tile(s)",
+                    "move budget ice: +5 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 18 group(s), weighted avg 6.13",
+                    "future orphans: -26",
+                    "future ice targets: +3.5",
+                    "guaranteed depth-2 target yield: +57.0",
+                    "probabilistic depth-2 rollout: +16.1 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 7,
+                "score": 297.42,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 247.45 + future_board -156.70 + next_move_yield 84.0 + stochastic_tree 46.2",
+                    "base length 7",
+                    "target chocolate: +140 for 7 useful tile(s)",
+                    "move budget chocolate: +64 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +3 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 19 group(s), weighted avg 6.10",
+                    "future orphans: -26",
+                    "future ice targets: +5.5",
+                    "guaranteed depth-2 target yield: +84.0",
+                    "probabilistic depth-2 rollout: +20.8 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 6,
+                "score": 280.53,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 198.23 + future_board -144.49 + next_move_yield 111.0 + stochastic_tree 48.6",
+                    "base length 6",
+                    "target chocolate: +120 for 6 useful tile(s)",
+                    "move budget chocolate: +55 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "long chain bonus +12",
+                    "future clusters: 19 group(s), weighted avg 6.17",
+                    "future orphans: -26",
+                    "future ice targets: +7.5",
+                    "guaranteed depth-2 target yield: +111.0",
+                    "probabilistic depth-2 rollout: +21.9 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 8,
+                "score": 265.67,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 277.55 + future_board -198.58 + next_move_yield 42.0 + stochastic_tree 34.7",
+                    "base length 8",
+                    "target chocolate: +160 for 8 useful tile(s)",
+                    "move budget chocolate: +73 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +3 (7 left / 22 moves = 0.3 per move)",
+                    "move budget ice: on pace +2",
+                    "long chain bonus +12",
+                    "future clusters: 20 group(s), weighted avg 3.97",
+                    "future orphans: -28",
+                    "future ice targets: +2.2",
+                    "guaranteed depth-2 target yield: +42.0",
+                    "probabilistic depth-2 rollout: +15.6 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 5,
+                "score": 261.0,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 2,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 161.14 + future_board -136.14 + next_move_yield 126.0 + stochastic_tree 47.8",
+                    "base length 5",
+                    "target chocolate: +100 for 5 useful tile(s)",
+                    "move budget chocolate: +45 (25 left / 22 moves = 1.1 per move)",
+                    "move budget chocolate: on pace +6",
+                    "medium chain bonus +5",
+                    "future clusters: 19 group(s), weighted avg 6.29",
+                    "future orphans: -25",
+                    "future ice targets: +7.5",
+                    "guaranteed depth-2 target yield: +126.0",
+                    "probabilistic depth-2 rollout: +21.5 from 12 fill sample(s)"
+                ]
+            }
+        ],
+        "ranker": "heuristic"
+    },
+    "bestMove": {
+        "item": "chocolate",
+        "length": 11,
+        "score": 408.87,
+        "path": [
+            {
+                "row": 0,
+                "col": 4
+            },
+            {
+                "row": 1,
+                "col": 3
+            },
+            {
+                "row": 2,
+                "col": 2
+            },
+            {
+                "row": 2,
+                "col": 3
+            },
+            {
+                "row": 3,
+                "col": 4
+            },
+            {
+                "row": 4,
+                "col": 3
+            },
+            {
+                "row": 4,
+                "col": 4
+            },
+            {
+                "row": 5,
+                "col": 3
+            },
+            {
+                "row": 6,
+                "col": 2
+            },
+            {
+                "row": 5,
+                "col": 1
+            },
+            {
+                "row": 6,
+                "col": 0
+            }
+        ],
+        "reasons": [
+            "utility immediate 402.91 + future_board -155.83 + next_move_yield 42.0 + stochastic_tree 41.1",
+            "base length 11",
+            "target chocolate: +220 for 11 useful tile(s)",
+            "move budget chocolate: +100 (25 left / 22 moves = 1.1 per move)",
+            "move budget chocolate: on pace +6",
+            "ice target: +45 for 3 iced tile(s)",
+            "move budget ice: +8 (7 left / 22 moves = 0.3 per move)",
+            "move budget ice: on pace +2",
+            "long chain bonus +12",
+            "future clusters: 17 group(s), weighted avg 6.39",
+            "future orphans: -23",
+            "future ice targets: +1.5",
+            "guaranteed depth-2 target yield: +42.0",
+            "probabilistic depth-2 rollout: +18.5 from 12 fill sample(s)"
+        ]
+    }
 }

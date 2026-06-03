@@ -73,12 +73,13 @@
         ]
     ],
     "analysis": {
-        "validChains": 114,
+        "validChains": 49,
+        "movesLeftParsed": 24,
         "bestMoves": [
             {
                 "item": "biscuit",
                 "length": 8,
-                "score": 114.38,
+                "score": 351.87,
                 "path": [
                     {
                         "row": 1,
@@ -114,19 +115,23 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 180.00 + 0.35*future -187.49",
+                    "utility immediate 254.75 + future_board -187.49 + next_move_yield 135.0 + stochastic_tree 61.6",
                     "base length 8",
                     "target biscuit: +160 for 8 useful tile(s)",
+                    "move budget biscuit: +69 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
                     "long chain bonus +12",
                     "future clusters: 18 group(s), weighted avg 4.17",
                     "future orphans: -25",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +27.7 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "biscuit",
                 "length": 8,
-                "score": 114.38,
+                "score": 349.21,
                 "path": [
                     {
                         "row": 1,
@@ -162,283 +167,23 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 180.00 + 0.35*future -187.49",
+                    "utility immediate 254.75 + future_board -187.49 + next_move_yield 135.0 + stochastic_tree 55.7",
                     "base length 8",
                     "target biscuit: +160 for 8 useful tile(s)",
+                    "move budget biscuit: +69 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
                     "long chain bonus +12",
                     "future clusters: 18 group(s), weighted avg 4.17",
                     "future orphans: -25",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +135.0",
+                    "probabilistic depth-2 rollout: +25.1 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "biscuit",
                 "length": 7,
-                "score": 87.6,
-                "path": [
-                    {
-                        "row": 1,
-                        "col": 0
-                    },
-                    {
-                        "row": 2,
-                        "col": 1
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 3
-                    },
-                    {
-                        "row": 3,
-                        "col": 4
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -204.00",
-                    "base length 7",
-                    "target biscuit: +140 for 7 useful tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 20 group(s), weighted avg 4.00",
-                    "future orphans: -27",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "biscuit",
-                "length": 7,
-                "score": 87.6,
-                "path": [
-                    {
-                        "row": 1,
-                        "col": 0
-                    },
-                    {
-                        "row": 2,
-                        "col": 1
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 3
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 3,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -204.00",
-                    "base length 7",
-                    "target biscuit: +140 for 7 useful tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 20 group(s), weighted avg 4.00",
-                    "future orphans: -27",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "biscuit",
-                "length": 7,
-                "score": 87.25,
-                "path": [
-                    {
-                        "row": 2,
-                        "col": 1
-                    },
-                    {
-                        "row": 2,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 3
-                    },
-                    {
-                        "row": 3,
-                        "col": 4
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
-                    "base length 7",
-                    "target biscuit: +140 for 7 useful tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 20 group(s), weighted avg 3.67",
-                    "future orphans: -27",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "biscuit",
-                "length": 7,
-                "score": 87.25,
-                "path": [
-                    {
-                        "row": 2,
-                        "col": 1
-                    },
-                    {
-                        "row": 2,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 3
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 3,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
-                    "base length 7",
-                    "target biscuit: +140 for 7 useful tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 20 group(s), weighted avg 3.67",
-                    "future orphans: -27",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "biscuit",
-                "length": 7,
-                "score": 87.25,
-                "path": [
-                    {
-                        "row": 2,
-                        "col": 2
-                    },
-                    {
-                        "row": 2,
-                        "col": 1
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 3
-                    },
-                    {
-                        "row": 3,
-                        "col": 4
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
-                    "base length 7",
-                    "target biscuit: +140 for 7 useful tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 20 group(s), weighted avg 3.67",
-                    "future orphans: -27",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "biscuit",
-                "length": 7,
-                "score": 87.25,
-                "path": [
-                    {
-                        "row": 2,
-                        "col": 2
-                    },
-                    {
-                        "row": 2,
-                        "col": 1
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 3
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 3,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -205.00",
-                    "base length 7",
-                    "target biscuit: +140 for 7 useful tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 20 group(s), weighted avg 3.67",
-                    "future orphans: -27",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "biscuit",
-                "length": 7,
-                "score": 86.9,
+                "score": 282.31,
                 "path": [
                     {
                         "row": 1,
@@ -470,19 +215,23 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -206.00",
+                    "utility immediate 225.08 + future_board -206.00 + next_move_yield 105.0 + stochastic_tree 54.1",
                     "base length 7",
                     "target biscuit: +140 for 7 useful tile(s)",
+                    "move budget biscuit: +61 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
                     "long chain bonus +12",
                     "future clusters: 20 group(s), weighted avg 3.33",
                     "future orphans: -27",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +24.3 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "biscuit",
                 "length": 7,
-                "score": 86.9,
+                "score": 279.16,
                 "path": [
                     {
                         "row": 1,
@@ -514,21 +263,285 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 159.00 + 0.35*future -206.00",
+                    "utility immediate 225.08 + future_board -206.00 + next_move_yield 105.0 + stochastic_tree 47.1",
                     "base length 7",
                     "target biscuit: +140 for 7 useful tile(s)",
+                    "move budget biscuit: +61 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
                     "long chain bonus +12",
                     "future clusters: 20 group(s), weighted avg 3.33",
                     "future orphans: -27",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +21.2 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 245.18,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 225.08 + future_board -223.57 + next_move_yield 75.0 + stochastic_tree 51.9",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "move budget biscuit: +61 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 2.81",
+                    "future orphans: -29",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +23.3 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 7,
+                "score": 241.98,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 225.08 + future_board -223.57 + next_move_yield 75.0 + stochastic_tree 44.8",
+                    "base length 7",
+                    "target biscuit: +140 for 7 useful tile(s)",
+                    "move budget biscuit: +61 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 2.81",
+                    "future orphans: -29",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +75.0",
+                    "probabilistic depth-2 rollout: +20.1 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 6,
+                "score": 239.02,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 195.42 + future_board -230.30 + next_move_yield 105.0 + stochastic_tree 42.7",
+                    "base length 6",
+                    "target biscuit: +120 for 6 useful tile(s)",
+                    "move budget biscuit: +52 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
+                    "long chain bonus +12",
+                    "future clusters: 21 group(s), weighted avg 3.23",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +105.0",
+                    "probabilistic depth-2 rollout: +19.2 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 6,
+                "score": 195.91,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 195.42 + future_board -232.40 + next_move_yield 60.0 + stochastic_tree 48.5",
+                    "base length 6",
+                    "target biscuit: +120 for 6 useful tile(s)",
+                    "move budget biscuit: +52 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
+                    "long chain bonus +12",
+                    "future clusters: 22 group(s), weighted avg 2.53",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +21.8 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 6,
+                "score": 193.17,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 2,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 4,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 195.42 + future_board -232.40 + next_move_yield 60.0 + stochastic_tree 42.4",
+                    "base length 6",
+                    "target biscuit: +120 for 6 useful tile(s)",
+                    "move budget biscuit: +52 (26 left / 24 moves = 1.1 per move)",
+                    "move budget biscuit: on pace +5",
+                    "long chain bonus +12",
+                    "future clusters: 22 group(s), weighted avg 2.53",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +19.1 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 3,
+                "score": 158.76,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 95.62 + future_board -205.83 + next_move_yield 120.0 + stochastic_tree 33.7",
+                    "base length 3",
+                    "target muffin: +60 for 3 useful tile(s)",
+                    "move budget muffin: +27 (27 left / 24 moves = 1.1 per move)",
+                    "move budget muffin: on pace +6",
+                    "future clusters: 21 group(s), weighted avg 3.39",
+                    "future orphans: -27",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +120.0",
+                    "probabilistic depth-2 rollout: +15.2 from 12 fill sample(s)"
                 ]
             }
-        ]
+        ],
+        "ranker": "heuristic"
     },
     "bestMove": {
         "item": "biscuit",
         "length": 8,
-        "score": 114.38,
+        "score": 351.87,
         "path": [
             {
                 "row": 1,
@@ -564,13 +577,17 @@
             }
         ],
         "reasons": [
-            "utility 1.00*immediate 180.00 + 0.35*future -187.49",
+            "utility immediate 254.75 + future_board -187.49 + next_move_yield 135.0 + stochastic_tree 61.6",
             "base length 8",
             "target biscuit: +160 for 8 useful tile(s)",
+            "move budget biscuit: +69 (26 left / 24 moves = 1.1 per move)",
+            "move budget biscuit: on pace +5",
             "long chain bonus +12",
             "future clusters: 18 group(s), weighted avg 4.17",
             "future orphans: -25",
-            "future ice targets: +0.0"
+            "future ice targets: +0.0",
+            "guaranteed depth-2 target yield: +135.0",
+            "probabilistic depth-2 rollout: +27.7 from 12 fill sample(s)"
         ]
     }
 }

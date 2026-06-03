@@ -1,0 +1,466 @@
+{
+    "gameState": {
+        "movesLeft": "18",
+        "level": "30",
+        "targets": {}
+    },
+    "board": [
+        [
+            "biscuit",
+            "chocolate",
+            "chocolate",
+            "chocolate",
+            "donut",
+            "muffin",
+            "donut"
+        ],
+        [
+            "chocolate",
+            "EMPTY",
+            "biscuit",
+            "EMPTY",
+            "biscuit",
+            "EMPTY",
+            "red"
+        ],
+        [
+            "chocolate",
+            "donut",
+            "muffin",
+            "muffin",
+            "donut",
+            "biscuit",
+            "biscuit"
+        ],
+        [
+            "chocolate",
+            "chocolate",
+            "donut",
+            "donut",
+            "biscuit",
+            "chocolate_ice",
+            "chocolate"
+        ],
+        [
+            "chocolate",
+            "red_ice",
+            "chocolate",
+            "red",
+            "biscuit",
+            "donut",
+            "biscuit"
+        ],
+        [
+            "red",
+            "EMPTY",
+            "red_ice",
+            "red",
+            "chocolate_ice",
+            "EMPTY",
+            "biscuit"
+        ],
+        [
+            "muffin",
+            "biscuit",
+            "red",
+            "biscuit",
+            "chocolate",
+            "biscuit",
+            "chocolate"
+        ]
+    ],
+    "analysis": {
+        "validChains": 50,
+        "movesLeftParsed": 18,
+        "bestMoves": [
+            {
+                "item": "chocolate",
+                "length": 7,
+                "score": -41.51,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 1
+                    },
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 0
+                    },
+                    {
+                        "row": 4,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 19.00 + future_board -172.89 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 7",
+                    "long chain bonus +12",
+                    "future clusters: 18 group(s), weighted avg 3.70",
+                    "future orphans: -23",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 4,
+                "score": -44.97,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 2,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 9.00 + future_board -154.20 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 4",
+                    "medium chain bonus +5",
+                    "future clusters: 17 group(s), weighted avg 4.60",
+                    "future orphans: -21",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 6,
+                "score": -45.39,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 1
+                    },
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 0
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 18.00 + future_board -181.11 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 6",
+                    "long chain bonus +12",
+                    "future clusters: 19 group(s), weighted avg 3.63",
+                    "future orphans: -24",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 6,
+                "score": -45.39,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 1
+                    },
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 18.00 + future_board -181.11 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 6",
+                    "long chain bonus +12",
+                    "future clusters: 19 group(s), weighted avg 3.63",
+                    "future orphans: -24",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 6,
+                "score": -45.39,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 1
+                    },
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 0
+                    },
+                    {
+                        "row": 4,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 18.00 + future_board -181.11 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 6",
+                    "long chain bonus +12",
+                    "future clusters: 19 group(s), weighted avg 3.63",
+                    "future orphans: -24",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "chocolate",
+                "length": 6,
+                "score": -45.39,
+                "path": [
+                    {
+                        "row": 0,
+                        "col": 1
+                    },
+                    {
+                        "row": 1,
+                        "col": 0
+                    },
+                    {
+                        "row": 2,
+                        "col": 0
+                    },
+                    {
+                        "row": 3,
+                        "col": 1
+                    },
+                    {
+                        "row": 3,
+                        "col": 0
+                    },
+                    {
+                        "row": 4,
+                        "col": 0
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 18.00 + future_board -181.11 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 6",
+                    "long chain bonus +12",
+                    "future clusters: 19 group(s), weighted avg 3.63",
+                    "future orphans: -24",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 4,
+                "score": -48.29,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 4
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 9.00 + future_board -163.70 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 4",
+                    "medium chain bonus +5",
+                    "future clusters: 17 group(s), weighted avg 4.10",
+                    "future orphans: -22",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 3,
+                "score": -48.88,
+                "path": [
+                    {
+                        "row": 4,
+                        "col": 6
+                    },
+                    {
+                        "row": 5,
+                        "col": 6
+                    },
+                    {
+                        "row": 6,
+                        "col": 5
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 3.00 + future_board -148.22 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 3",
+                    "future clusters: 18 group(s), weighted avg 3.93",
+                    "future orphans: -20",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "donut",
+                "length": 3,
+                "score": -50.35,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 4
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 3,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 3.00 + future_board -152.41 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 3",
+                    "future clusters: 17 group(s), weighted avg 5.20",
+                    "future orphans: -21",
+                    "future ice targets: +0.0"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 4,
+                "score": -51.09,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 2,
+                        "col": 5
+                    },
+                    {
+                        "row": 3,
+                        "col": 4
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 9.00 + future_board -171.70 + next_move_yield 0.0 + stochastic_tree 0.0",
+                    "base length 4",
+                    "medium chain bonus +5",
+                    "future clusters: 17 group(s), weighted avg 4.10",
+                    "future orphans: -23",
+                    "future ice targets: +0.0"
+                ]
+            }
+        ],
+        "ranker": "heuristic"
+    },
+    "bestMove": {
+        "item": "chocolate",
+        "length": 7,
+        "score": -41.51,
+        "path": [
+            {
+                "row": 0,
+                "col": 1
+            },
+            {
+                "row": 1,
+                "col": 0
+            },
+            {
+                "row": 2,
+                "col": 0
+            },
+            {
+                "row": 3,
+                "col": 0
+            },
+            {
+                "row": 4,
+                "col": 0
+            },
+            {
+                "row": 3,
+                "col": 1
+            },
+            {
+                "row": 4,
+                "col": 2
+            }
+        ],
+        "reasons": [
+            "utility immediate 19.00 + future_board -172.89 + next_move_yield 0.0 + stochastic_tree 0.0",
+            "base length 7",
+            "long chain bonus +12",
+            "future clusters: 18 group(s), weighted avg 3.70",
+            "future orphans: -23",
+            "future ice targets: +0.0"
+        ]
+    }
+}

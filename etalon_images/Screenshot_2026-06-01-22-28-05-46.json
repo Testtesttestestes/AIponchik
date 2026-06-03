@@ -1,0 +1,75 @@
+{
+  "gameState": {
+    "movesLeft": "3",
+    "level": "26",
+    "targets": {
+      "muffin": "26 / 27",
+      "brookie": "23 / 26"
+    }
+  },
+  "board": [
+    [
+      "donut",
+      "biscuit",
+      "red",
+      "donut",
+      "donut",
+      "donut",
+      "biscuit"
+    ],
+    [
+      "donut",
+      "muffin",
+      "red",
+      "muffin",
+      "muffin",
+      "muffin",
+      "chocolate"
+    ],
+    [
+      "red",
+      "EMPTY",
+      "donut",
+      "donut",
+      "donut",
+      "EMPTY",
+      "biscuit"
+    ],
+    [
+      "chocolate",
+      "donut",
+      "donut",
+      "EMPTY",
+      "muffin",
+      "donut",
+      "donut"
+    ],
+    [
+      "chocolate",
+      "chocolate",
+      "muffin",
+      "biscuit",
+      "chocolate",
+      "biscuit",
+      "donut"
+    ],
+    [
+      "muffin",
+      "muffin",
+      "chocolate",
+      "muffin",
+      "donut",
+      "donut",
+      "donut"
+    ],
+    [
+      "donut",
+      "red",
+      "chocolate",
+      "muffin",
+      "chocolate",
+      "biscuit",
+      "biscuit"
+    ]
+  ]
+}

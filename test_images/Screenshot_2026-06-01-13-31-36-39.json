@@ -74,295 +74,49 @@
         ]
     ],
     "analysis": {
-        "validChains": 59,
+        "validChains": 34,
+        "movesLeftParsed": 14,
         "bestMoves": [
             {
-                "item": "muffin",
-                "length": 6,
-                "score": 74.53,
+                "item": "biscuit",
+                "length": 4,
+                "score": 195.35,
                 "path": [
                     {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 2
+                        "row": 2,
+                        "col": 6
                     },
                     {
                         "row": 3,
-                        "col": 3
+                        "col": 6
                     },
                     {
                         "row": 4,
-                        "col": 4
+                        "col": 5
                     },
                     {
                         "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 2
+                        "col": 6
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 153.00 + 0.35*future -224.20",
-                    "base length 6",
-                    "target muffin: +120 for 6 useful tile(s)",
-                    "ice target: +15 for 1 iced tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 21 group(s), weighted avg 2.60",
-                    "future orphans: -29",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "muffin",
-                "length": 6,
-                "score": 74.53,
-                "path": [
-                    {
-                        "row": 4,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 2
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 153.00 + 0.35*future -224.20",
-                    "base length 6",
-                    "target muffin: +120 for 6 useful tile(s)",
-                    "ice target: +15 for 1 iced tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 21 group(s), weighted avg 2.60",
-                    "future orphans: -29",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "muffin",
-                "length": 6,
-                "score": 74.53,
-                "path": [
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 3,
-                        "col": 3
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 2
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 2
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 153.00 + 0.35*future -224.20",
-                    "base length 6",
-                    "target muffin: +120 for 6 useful tile(s)",
-                    "ice target: +15 for 1 iced tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 21 group(s), weighted avg 2.60",
-                    "future orphans: -29",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "muffin",
-                "length": 6,
-                "score": 68.77,
-                "path": [
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 153.00 + 0.35*future -240.65",
-                    "base length 6",
-                    "target muffin: +120 for 6 useful tile(s)",
-                    "ice target: +15 for 1 iced tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 23 group(s), weighted avg 2.45",
-                    "future orphans: -31",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "muffin",
-                "length": 6,
-                "score": 68.77,
-                "path": [
-                    {
-                        "row": 4,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 153.00 + 0.35*future -240.65",
-                    "base length 6",
-                    "target muffin: +120 for 6 useful tile(s)",
-                    "ice target: +15 for 1 iced tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 23 group(s), weighted avg 2.45",
-                    "future orphans: -31",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "muffin",
-                "length": 6,
-                "score": 68.77,
-                "path": [
-                    {
-                        "row": 4,
-                        "col": 4
-                    },
-                    {
-                        "row": 3,
-                        "col": 3
-                    },
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 4,
-                        "col": 2
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 6,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 153.00 + 0.35*future -240.65",
-                    "base length 6",
-                    "target muffin: +120 for 6 useful tile(s)",
-                    "ice target: +15 for 1 iced tile(s)",
-                    "long chain bonus +12",
-                    "future clusters: 23 group(s), weighted avg 2.45",
-                    "future orphans: -31",
-                    "future ice targets: +0.0"
-                ]
-            },
-            {
-                "item": "muffin",
-                "length": 5,
-                "score": 43.74,
-                "path": [
-                    {
-                        "row": 3,
-                        "col": 2
-                    },
-                    {
-                        "row": 3,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 2
-                    },
-                    {
-                        "row": 5,
-                        "col": 3
-                    },
-                    {
-                        "row": 4,
-                        "col": 4
-                    }
-                ],
-                "reasons": [
-                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
-                    "base length 5",
-                    "target muffin: +100 for 5 useful tile(s)",
-                    "ice target: +15 for 1 iced tile(s)",
+                    "utility immediate 126.00 + future_board -239.14 + next_move_yield 132.0 + stochastic_tree 46.8",
+                    "base length 4",
+                    "target biscuit: +80 for 4 useful tile(s)",
+                    "move budget biscuit: +32 (14 left / 14 moves = 1.0 per move)",
+                    "move budget biscuit: on pace +5",
                     "medium chain bonus +5",
-                    "future clusters: 22 group(s), weighted avg 2.61",
-                    "future orphans: -30",
-                    "future ice targets: +0.0"
+                    "future clusters: 20 group(s), weighted avg 4.29",
+                    "future orphans: -33",
+                    "future ice targets: +2.0",
+                    "guaranteed depth-2 target yield: +132.0",
+                    "probabilistic depth-2 rollout: +21.0 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "muffin",
                 "length": 5,
-                "score": 43.74,
+                "score": 167.21,
                 "path": [
                     {
                         "row": 3,
@@ -386,20 +140,69 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
+                    "utility immediate 170.93 + future_board -232.17 + next_move_yield 60.0 + stochastic_tree 39.0",
                     "base length 5",
                     "target muffin: +100 for 5 useful tile(s)",
+                    "move budget muffin: +40 (14 left / 14 moves = 1.0 per move)",
+                    "move budget muffin: on pace +5",
                     "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +1 (1 left / 14 moves = 0.1 per move)",
+                    "move budget ice: on pace +0",
                     "medium chain bonus +5",
                     "future clusters: 21 group(s), weighted avg 2.61",
                     "future orphans: -30",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +17.5 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "muffin",
                 "length": 5,
-                "score": 43.74,
+                "score": 167.04,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 2
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 170.93 + future_board -232.17 + next_move_yield 60.0 + stochastic_tree 38.6",
+                    "base length 5",
+                    "target muffin: +100 for 5 useful tile(s)",
+                    "move budget muffin: +40 (14 left / 14 moves = 1.0 per move)",
+                    "move budget muffin: on pace +5",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +1 (1 left / 14 moves = 0.1 per move)",
+                    "move budget ice: on pace +0",
+                    "medium chain bonus +5",
+                    "future clusters: 22 group(s), weighted avg 2.61",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +17.4 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 5,
+                "score": 166.69,
                 "path": [
                     {
                         "row": 3,
@@ -423,20 +226,26 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
+                    "utility immediate 170.93 + future_board -232.17 + next_move_yield 60.0 + stochastic_tree 37.8",
                     "base length 5",
                     "target muffin: +100 for 5 useful tile(s)",
+                    "move budget muffin: +40 (14 left / 14 moves = 1.0 per move)",
+                    "move budget muffin: on pace +5",
                     "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +1 (1 left / 14 moves = 0.1 per move)",
+                    "move budget ice: on pace +0",
                     "medium chain bonus +5",
                     "future clusters: 22 group(s), weighted avg 2.61",
                     "future orphans: -30",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +17.0 from 12 fill sample(s)"
                 ]
             },
             {
                 "item": "muffin",
                 "length": 5,
-                "score": 43.74,
+                "score": 166.53,
                 "path": [
                     {
                         "row": 3,
@@ -460,57 +269,238 @@
                     }
                 ],
                 "reasons": [
-                    "utility 1.00*immediate 125.00 + 0.35*future -232.17",
+                    "utility immediate 170.93 + future_board -232.17 + next_move_yield 60.0 + stochastic_tree 37.5",
                     "base length 5",
                     "target muffin: +100 for 5 useful tile(s)",
+                    "move budget muffin: +40 (14 left / 14 moves = 1.0 per move)",
+                    "move budget muffin: on pace +5",
                     "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +1 (1 left / 14 moves = 0.1 per move)",
+                    "move budget ice: on pace +0",
                     "medium chain bonus +5",
                     "future clusters: 22 group(s), weighted avg 2.61",
                     "future orphans: -30",
-                    "future ice targets: +0.0"
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +16.9 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 5,
+                "score": 165.28,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 2
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 170.93 + future_board -232.17 + next_move_yield 60.0 + stochastic_tree 34.7",
+                    "base length 5",
+                    "target muffin: +100 for 5 useful tile(s)",
+                    "move budget muffin: +40 (14 left / 14 moves = 1.0 per move)",
+                    "move budget muffin: on pace +5",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +1 (1 left / 14 moves = 0.1 per move)",
+                    "move budget ice: on pace +0",
+                    "medium chain bonus +5",
+                    "future clusters: 22 group(s), weighted avg 2.61",
+                    "future orphans: -30",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +15.6 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 3,
+                "score": 154.38,
+                "path": [
+                    {
+                        "row": 2,
+                        "col": 6
+                    },
+                    {
+                        "row": 3,
+                        "col": 6
+                    },
+                    {
+                        "row": 4,
+                        "col": 5
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 92.00 + future_board -237.84 + next_move_yield 132.0 + stochastic_tree 30.3",
+                    "base length 3",
+                    "target biscuit: +60 for 3 useful tile(s)",
+                    "move budget biscuit: +24 (14 left / 14 moves = 1.0 per move)",
+                    "move budget biscuit: on pace +5",
+                    "future clusters: 20 group(s), weighted avg 4.72",
+                    "future orphans: -33",
+                    "future ice targets: +2.0",
+                    "guaranteed depth-2 target yield: +132.0",
+                    "probabilistic depth-2 rollout: +13.6 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "biscuit",
+                "length": 3,
+                "score": 152.4,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 6
+                    },
+                    {
+                        "row": 4,
+                        "col": 5
+                    },
+                    {
+                        "row": 5,
+                        "col": 6
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 92.00 + future_board -247.37 + next_move_yield 132.0 + stochastic_tree 33.3",
+                    "base length 3",
+                    "target biscuit: +60 for 3 useful tile(s)",
+                    "move budget biscuit: +24 (14 left / 14 moves = 1.0 per move)",
+                    "move budget biscuit: on pace +5",
+                    "future clusters: 21 group(s), weighted avg 4.21",
+                    "future orphans: -34",
+                    "future ice targets: +2.0",
+                    "guaranteed depth-2 target yield: +132.0",
+                    "probabilistic depth-2 rollout: +15.0 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 5,
+                "score": 145.16,
+                "path": [
+                    {
+                        "row": 3,
+                        "col": 2
+                    },
+                    {
+                        "row": 3,
+                        "col": 3
+                    },
+                    {
+                        "row": 4,
+                        "col": 4
+                    },
+                    {
+                        "row": 5,
+                        "col": 3
+                    },
+                    {
+                        "row": 6,
+                        "col": 4
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 170.93 + future_board -256.46 + next_move_yield 60.0 + stochastic_tree 8.9",
+                    "base length 5",
+                    "target muffin: +100 for 5 useful tile(s)",
+                    "move budget muffin: +40 (14 left / 14 moves = 1.0 per move)",
+                    "move budget muffin: on pace +5",
+                    "ice target: +15 for 1 iced tile(s)",
+                    "move budget ice: +1 (1 left / 14 moves = 0.1 per move)",
+                    "move budget ice: on pace +0",
+                    "medium chain bonus +5",
+                    "future clusters: 23 group(s), weighted avg 2.51",
+                    "future orphans: -33",
+                    "future ice targets: +0.0",
+                    "guaranteed depth-2 target yield: +60.0",
+                    "probabilistic depth-2 rollout: +4.0 from 12 fill sample(s)"
+                ]
+            },
+            {
+                "item": "muffin",
+                "length": 3,
+                "score": 142.42,
+                "path": [
+                    {
+                        "row": 1,
+                        "col": 3
+                    },
+                    {
+                        "row": 1,
+                        "col": 4
+                    },
+                    {
+                        "row": 1,
+                        "col": 5
+                    }
+                ],
+                "reasons": [
+                    "utility immediate 92.00 + future_board -242.30 + next_move_yield 117.0 + stochastic_tree 40.5",
+                    "base length 3",
+                    "target muffin: +60 for 3 useful tile(s)",
+                    "move budget muffin: +24 (14 left / 14 moves = 1.0 per move)",
+                    "move budget muffin: on pace +5",
+                    "future clusters: 21 group(s), weighted avg 3.23",
+                    "future orphans: -33",
+                    "future ice targets: +2.0",
+                    "guaranteed depth-2 target yield: +117.0",
+                    "probabilistic depth-2 rollout: +18.2 from 12 fill sample(s)"
                 ]
             }
-        ]
+        ],
+        "ranker": "heuristic"
     },
     "bestMove": {
-        "item": "muffin",
-        "length": 6,
-        "score": 74.53,
+        "item": "biscuit",
+        "length": 4,
+        "score": 195.35,
         "path": [
             {
-                "row": 3,
-                "col": 2
-            },
-            {
-                "row": 4,
-                "col": 2
+                "row": 2,
+                "col": 6
             },
             {
                 "row": 3,
-                "col": 3
+                "col": 6
             },
             {
                 "row": 4,
-                "col": 4
+                "col": 5
             },
             {
                 "row": 5,
-                "col": 3
-            },
-            {
-                "row": 6,
-                "col": 2
+                "col": 6
             }
         ],
         "reasons": [
-            "utility 1.00*immediate 153.00 + 0.35*future -224.20",
-            "base length 6",
-            "target muffin: +120 for 6 useful tile(s)",
-            "ice target: +15 for 1 iced tile(s)",
-            "long chain bonus +12",
-            "future clusters: 21 group(s), weighted avg 2.60",
-            "future orphans: -29",
-            "future ice targets: +0.0"
+            "utility immediate 126.00 + future_board -239.14 + next_move_yield 132.0 + stochastic_tree 46.8",
+            "base length 4",
+            "target biscuit: +80 for 4 useful tile(s)",
+            "move budget biscuit: +32 (14 left / 14 moves = 1.0 per move)",
+            "move budget biscuit: on pace +5",
+            "medium chain bonus +5",
+            "future clusters: 20 group(s), weighted avg 4.29",
+            "future orphans: -33",
+            "future ice targets: +2.0",
+            "guaranteed depth-2 target yield: +132.0",
+            "probabilistic depth-2 rollout: +21.0 from 12 fill sample(s)"
         ]
     }
 }
