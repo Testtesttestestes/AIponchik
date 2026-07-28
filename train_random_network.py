@@ -7,7 +7,7 @@ This lets us iterate on training quality without changing live gameplay.
 import argparse
 import json
 
-from neural_policy import TrainingConfig, evaluate_policy_games, train_policy
+from neural_policy_randomforest import TrainingConfig, evaluate_policy_games, train_policy
 from game_parser import ensure_parent_dir
 
 
