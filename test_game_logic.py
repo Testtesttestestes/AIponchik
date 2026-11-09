@@ -123,7 +123,8 @@ def test_ice_target_scores_iced_base_tile():
         path,
     )
 
-    assert score == 78.0
+    # 3 length + 60 target + 36 refresh (muffin is starved on board) + 150 ice hit
+    assert score == 249.0
     assert any(reason.startswith("ice target") for reason in reasons)
 
 
@@ -213,7 +214,9 @@ def test_non_target_clearance_move_has_no_urgent_budget_penalty():
         moves_left=2,
     )
 
-    assert score == 3.0
+    # 3 length + 36 refresh: one muffin on board for nine required, so
+    # clearing cells is worth something even off-target.
+    assert score == 39.0
     assert not any("non-target move" in reason for reason in reasons)
 
 
@@ -417,8 +420,8 @@ def test_adb_play_move_converts_board_path_to_swipe_segments():
     segments = FakeReader().play_move(parser, move, duration_ms=77)
 
     assert segments == 2
-    assert calls[0] == ("input", "swipe", 10, 100, 20, 200, 77)
-    assert calls[1] == ("input", "swipe", 20, 200, 30, 300, 77)
+    # Both segments travel in a single ADB shell call.
+    assert calls == [("input swipe 10 100 20 200 77 && input swipe 20 200 30 300 77",)]
 
 
 def test_neural_policy_feature_encoder_has_stable_shape():
@@ -537,3 +540,93 @@ def test_policy_behavior_audit_direct_target_yield_counts_item_and_ice():
     move = MoveCandidate("muffin", ((0, 0), (0, 1)), 0.0, ())
 
     assert direct_target_yield(pathfinder, state, move) == 3
+
+
+def test_find_paths_includes_longest_chain_of_every_cluster():
+    # The capped DFS fills its quota from the top-left muffin cluster; the long
+    # muffin snake at the bottom must still be offered as a candidate.
+    board = [
+        ["muffin", "muffin", "muffin", "red", "donut", "red", "donut"],
+        ["muffin", "muffin", "muffin", "donut", "red", "donut", "red"],
+        ["red", "donut", "red", "donut", "red", "donut", "red"],
+        ["donut", "red", "donut", "red", "donut", "red", "donut"],
+        ["chocolate", "biscuit", "chocolate", "biscuit", "chocolate", "biscuit", "chocolate"],
+        ["muffin", "muffin", "muffin", "muffin", "muffin", "muffin", "muffin"],
+        ["biscuit", "chocolate", "biscuit", "chocolate", "biscuit", "chocolate", "biscuit"],
+    ]
+
+    paths = MovePathfinder(max_paths_per_item=3).find_paths(board, allowed_items={"muffin"})
+
+    bottom = tuple((5, col) for col in range(7))
+    assert any(MovePathfinder._canonical_path(path) == bottom for path in paths)
+    assert max(len(path) for path in paths) == 7
+
+
+def test_refresh_bonus_only_applies_when_target_is_starved_on_board():
+    path = ((0, 0), (0, 1), (0, 2))
+    starved_board = [["donut", "donut", "donut"], ["muffin", "red", "biscuit"]]
+    supplied_board = [["donut", "donut", "donut"], ["muffin", "muffin", "muffin"]]
+
+    starved, _ = MovePathfinder().score_path(starved_board, {"muffin": "0 / 3"}, "donut", path)
+    supplied, _ = MovePathfinder().score_path(supplied_board, {"muffin": "0 / 3"}, "donut", path)
+
+    assert starved == 39.0
+    assert supplied == 3.0
+
+
+def test_raw_screencap_decodes_both_header_sizes_to_bgr():
+    import struct
+    import numpy as np
+    from game_parser import AdbScreenReader
+
+    rgba = np.zeros((3, 2, 4), dtype=np.uint8)
+    rgba[..., 0] = 10   # R
+    rgba[..., 1] = 20   # G
+    rgba[..., 2] = 30   # B
+    rgba[..., 3] = 255
+    for header in (struct.pack("<3I", 2, 3, 1), struct.pack("<4I", 2, 3, 1, 0)):
+        frame = AdbScreenReader.decode_raw_screencap(header + rgba.tobytes())
+        assert frame.shape == (3, 2, 3)
+        assert tuple(frame[0, 0]) == (30, 20, 10)
+
+    assert AdbScreenReader.decode_raw_screencap(b"\x89PNG" + b"0" * 64) is None
+
+
+def test_swipe_script_sends_whole_chain_in_one_shell_call():
+    from game_parser import AdbScreenReader
+
+    points = [(10, 20), (30, 40), (50, 60)]
+    segments = AdbScreenReader.build_swipe_script(points, duration_ms=90, mode="segments")
+    gesture = AdbScreenReader.build_swipe_script(points, mode="gesture")
+
+    assert segments == "input swipe 10 20 30 40 90 && input swipe 30 40 50 60 90"
+    assert gesture == (
+        "input motionevent DOWN 10 20 && input motionevent MOVE 30 40 && "
+        "input motionevent MOVE 50 60 && input motionevent UP 50 60"
+    )
+
+    calls = []
+    reader = AdbScreenReader(adb_path="adb")
+    reader.run_shell = lambda *args, **kwargs: calls.append(args)
+    assert reader.swipe_points(points) == 2
+    assert len(calls) == 1
+
+
+def test_ocr_is_cached_for_identical_pixels(monkeypatch):
+    import numpy as np
+    import game_parser
+
+    calls = []
+    monkeypatch.setattr(
+        game_parser.pytesseract, "image_to_string",
+        lambda image, config="": calls.append(config) or "12",
+    )
+    parser = game_parser.GameBoardParser()
+    mask = np.zeros((8, 8), dtype=np.uint8)
+    other = np.full((8, 8), 255, dtype=np.uint8)
+
+    assert parser._cached_ocr(mask, "cfg") == "12"
+    assert parser._cached_ocr(mask.copy(), "cfg") == "12"
+    assert len(calls) == 1
+    parser._cached_ocr(other, "cfg")
+    assert len(calls) == 2
