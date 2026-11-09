@@ -29,11 +29,14 @@ class HeuristicWeights:
     ice_target: float = 6.0
     stochastic: float = 0.45
     lookahead: float = 0.65
+    ice_hit: float = 150.0
+    refresh: float = 12.0
 
 
 DEFAULT_SEARCH_DEPTH = 2
 DEFAULT_ROLLOUT_SAMPLES = 12
 DEFAULT_MAX_PATHS_PER_ITEM = 15
+LONGEST_PATH_NODE_BUDGET = 1500
 FINISH_TARGET_BONUS = 50.0
 ENDGAME_GREEDY_MOVES = 2
 DEFAULT_POLICY_CANDIDATES = 32
@@ -427,6 +430,16 @@ class MovePathfinder:
                 path.pop()
                 visited.remove((nr, nc))
 
+        # The capped DFS below fills its per-item quota from the first cluster it
+        # meets, so seed the result with the longest chain of every cluster first;
+        # these do not count against the quota.
+        for path in self.longest_component_paths(board, allowed_items=allowed_items):
+            item = self.base_item(board[path[0][0]][path[0][1]])
+            key = (item, self._canonical_path(path))
+            if key not in seen:
+                seen.add(key)
+                paths.append(tuple(path))
+
         for row in range(rows):
             for col in range(cols):
                 item = self.base_item(board[row][col])
@@ -438,6 +451,81 @@ class MovePathfinder:
                     continue
                 dfs(item, row, col, {(row, col)}, [(row, col)])
         return paths
+
+    def longest_component_paths(self, board, allowed_items=None, node_budget=LONGEST_PATH_NODE_BUDGET):
+        """Return the longest chain (and the most-iced chain) of every same-item cluster.
+
+        Longest simple path is exponential in general, so each cluster gets a
+        node budget; clusters on a 7x7 board are small enough that the budget is
+        rarely hit, and when it is the best chain found so far is returned.
+        """
+        rows = len(board)
+        cols = len(board[0]) if rows else 0
+        allowed_items = set(allowed_items) if allowed_items is not None else None
+        base = [[self.base_item(cell) for cell in row] for row in board]
+        assigned = set()
+        result = []
+
+        for row in range(rows):
+            for col in range(cols):
+                item = base[row][col]
+                if item is None or (row, col) in assigned:
+                    continue
+                component = [(row, col)]
+                assigned.add((row, col))
+                index = 0
+                while index < len(component):
+                    cr, cc = component[index]
+                    index += 1
+                    for nr, nc in self._neighbors(cr, cc, rows, cols):
+                        if (nr, nc) not in assigned and base[nr][nc] == item:
+                            assigned.add((nr, nc))
+                            component.append((nr, nc))
+                if len(component) < self.min_length:
+                    continue
+                if allowed_items is not None and item not in allowed_items:
+                    continue
+
+                adjacency = {
+                    cell: [n for n in self._neighbors(cell[0], cell[1], rows, cols) if base[n[0]][n[1]] == item]
+                    for cell in component
+                }
+                iced = {cell for cell in component if self.has_ice(board[cell[0]][cell[1]])}
+                size = len(component)
+                state = {"nodes": 0, "best": (), "best_ice": (), "best_ice_key": (0, 0), "done": False}
+
+                def dfs(cell, visited, path, ice_count):
+                    state["nodes"] += 1
+                    if len(path) > len(state["best"]):
+                        state["best"] = tuple(path)
+                    if iced and (ice_count, len(path)) > state["best_ice_key"]:
+                        state["best_ice_key"] = (ice_count, len(path))
+                        state["best_ice"] = tuple(path)
+                    if len(path) == size:
+                        state["done"] = True
+                        return
+                    # Warnsdorff ordering: visit the most constrained neighbour first.
+                    options = [n for n in adjacency[cell] if n not in visited]
+                    options.sort(key=lambda n: sum(1 for m in adjacency[n] if m not in visited))
+                    for nxt in options:
+                        if state["done"] or state["nodes"] >= node_budget:
+                            return
+                        visited.add(nxt)
+                        path.append(nxt)
+                        dfs(nxt, visited, path, ice_count + (1 if nxt in iced else 0))
+                        path.pop()
+                        visited.remove(nxt)
+
+                for start in sorted(component, key=lambda cell: len(adjacency[cell])):
+                    if state["done"] or state["nodes"] >= node_budget:
+                        break
+                    dfs(start, {start}, [start], 1 if start in iced else 0)
+
+                if len(state["best"]) >= self.min_length:
+                    result.append(state["best"])
+                if len(state["best_ice"]) >= self.min_length and state["best_ice"] != state["best"]:
+                    result.append(state["best_ice"])
+        return result
 
     def score_paths(self, board, targets, paths, moves_left=None):
         paths_to_score = list(paths)
@@ -677,11 +765,31 @@ class MovePathfinder:
             completed_item_target = True
             reasons.append(f"target {item} completed: item score is zero")
 
+        if self.weights.refresh > 0 and not completed_item_target:
+            # Targets can be supply-limited: when fewer target tiles are on the
+            # board than are still required, every removed cell is a chance for
+            # a missing tile to drop in, so chain length itself has value.
+            starved = 0
+            for name, data in normalized_targets.items():
+                if name == "ice" or data["remaining"] <= 0:
+                    continue
+                on_board = sum(1 for row in board for cell in row if self.base_item(cell) == name)
+                left = data["remaining"]
+                if name == item:
+                    on_board -= len(path)
+                    left -= min(len(path), left)
+                if on_board < left:
+                    starved += 1
+            if starved:
+                bonus = self.weights.refresh * starved * len(path)
+                score += bonus
+                reasons.append(f"refresh for {starved} starved target(s): +{bonus:.0f}")
+
         ice_count = sum(1 for row, col in path if self.has_ice(board[row][col]))
         ice_target = normalized_targets.get("ice")
         if ice_count and ice_target and ice_target["remaining"] > 0:
             useful_ice = min(ice_count, ice_target["remaining"])
-            bonus = useful_ice * 15.0
+            bonus = useful_ice * self.weights.ice_hit
             score += bonus
             reasons.append(f"ice target: +{bonus:.0f} for {useful_ice} iced tile(s)")
             pressure_bonus, pressure_reasons = self._move_budget_pressure(

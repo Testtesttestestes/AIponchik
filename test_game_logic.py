@@ -123,7 +123,8 @@ def test_ice_target_scores_iced_base_tile():
         path,
     )
 
-    assert score == 78.0
+    # 3 length + 60 target + 36 refresh (muffin is starved on board) + 150 ice hit
+    assert score == 249.0
     assert any(reason.startswith("ice target") for reason in reasons)
 
 
@@ -213,7 +214,9 @@ def test_non_target_clearance_move_has_no_urgent_budget_penalty():
         moves_left=2,
     )
 
-    assert score == 3.0
+    # 3 length + 36 refresh: one muffin on board for nine required, so
+    # clearing cells is worth something even off-target.
+    assert score == 39.0
     assert not any("non-target move" in reason for reason in reasons)
 
 
@@ -537,3 +540,35 @@ def test_policy_behavior_audit_direct_target_yield_counts_item_and_ice():
     move = MoveCandidate("muffin", ((0, 0), (0, 1)), 0.0, ())
 
     assert direct_target_yield(pathfinder, state, move) == 3
+
+
+def test_find_paths_includes_longest_chain_of_every_cluster():
+    # The capped DFS fills its quota from the top-left muffin cluster; the long
+    # muffin snake at the bottom must still be offered as a candidate.
+    board = [
+        ["muffin", "muffin", "muffin", "red", "donut", "red", "donut"],
+        ["muffin", "muffin", "muffin", "donut", "red", "donut", "red"],
+        ["red", "donut", "red", "donut", "red", "donut", "red"],
+        ["donut", "red", "donut", "red", "donut", "red", "donut"],
+        ["chocolate", "biscuit", "chocolate", "biscuit", "chocolate", "biscuit", "chocolate"],
+        ["muffin", "muffin", "muffin", "muffin", "muffin", "muffin", "muffin"],
+        ["biscuit", "chocolate", "biscuit", "chocolate", "biscuit", "chocolate", "biscuit"],
+    ]
+
+    paths = MovePathfinder(max_paths_per_item=3).find_paths(board, allowed_items={"muffin"})
+
+    bottom = tuple((5, col) for col in range(7))
+    assert any(MovePathfinder._canonical_path(path) == bottom for path in paths)
+    assert max(len(path) for path in paths) == 7
+
+
+def test_refresh_bonus_only_applies_when_target_is_starved_on_board():
+    path = ((0, 0), (0, 1), (0, 2))
+    starved_board = [["donut", "donut", "donut"], ["muffin", "red", "biscuit"]]
+    supplied_board = [["donut", "donut", "donut"], ["muffin", "muffin", "muffin"]]
+
+    starved, _ = MovePathfinder().score_path(starved_board, {"muffin": "0 / 3"}, "donut", path)
+    supplied, _ = MovePathfinder().score_path(supplied_board, {"muffin": "0 / 3"}, "donut", path)
+
+    assert starved == 39.0
+    assert supplied == 3.0
