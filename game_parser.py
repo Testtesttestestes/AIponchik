@@ -10,6 +10,8 @@ import re
 import subprocess
 import shutil
 import time
+import zlib
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
@@ -37,6 +39,9 @@ DEFAULT_SEARCH_DEPTH = 2
 DEFAULT_ROLLOUT_SAMPLES = 12
 DEFAULT_MAX_PATHS_PER_ITEM = 15
 LONGEST_PATH_NODE_BUDGET = 1500
+LIVE_IDLE_SLEEP = 0.05
+# Pause while the screen is unchanged, so an idle phone is not flooded with screencaps.
+LIVE_UNCHANGED_SLEEP = 0.25
 FINISH_TARGET_BONUS = 50.0
 ENDGAME_GREEDY_MOVES = 2
 DEFAULT_POLICY_CANDIDATES = 32
@@ -1118,9 +1123,18 @@ class RandomGameSimulator:
 class AdbScreenReader:
     """Capture a connected Android screen and wait until the frame is stable."""
 
-    def __init__(self, adb_path="adb", serial=None):
+    CAPTURE_MODES = ("auto", "raw", "png")
+
+    def __init__(self, adb_path="adb", serial=None, capture_mode="auto", poll_interval=0.05):
         self.adb_path = self.resolve_adb_path(adb_path)
         self.serial = serial
+        if capture_mode not in self.CAPTURE_MODES:
+            raise ValueError(f"Unknown capture mode: {capture_mode}")
+        self.capture_mode = capture_mode
+        self.poll_interval = max(0.0, float(poll_interval))
+        self._device_checked = False
+        self.last_capture_seconds = None
+        self.verbose = True
 
     @staticmethod
     def resolve_adb_path(adb_path="adb"):
@@ -1161,32 +1175,45 @@ class AdbScreenReader:
             raise RuntimeError((result.stderr or result.stdout or "ADB shell command failed").strip())
         return result
 
-    def swipe_points(self, points, duration_ms=120, pause=0.04):
-        """Experimentally draw a chain on the device with ADB swipe segments."""
-        self.ensure_device()
+    @staticmethod
+    def build_swipe_script(points, duration_ms=120, mode="segments"):
+        """Return one device-side shell script that draws the whole chain.
+
+        ``segments`` keeps the original behaviour (one ``input swipe`` per pair
+        of cells); ``gesture`` keeps the finger down for the whole chain with
+        ``input motionevent`` (Android 11+).  Either way the chain is sent with
+        a single ADB round-trip instead of one ``adb`` process per segment.
+        """
+        points = [(int(x), int(y)) for x, y in points]
+        if mode == "gesture":
+            commands = [f"input motionevent DOWN {points[0][0]} {points[0][1]}"]
+            commands.extend(f"input motionevent MOVE {x} {y}" for x, y in points[1:])
+            commands.append(f"input motionevent UP {points[-1][0]} {points[-1][1]}")
+        elif mode == "segments":
+            commands = [
+                f"input swipe {start[0]} {start[1]} {end[0]} {end[1]} {int(duration_ms)}"
+                for start, end in zip(points, points[1:])
+            ]
+        else:
+            raise ValueError(f"Unknown swipe mode: {mode}")
+        return " && ".join(commands)
+
+    def swipe_points(self, points, duration_ms=120, mode="segments"):
+        """Experimentally draw a chain on the device in one ADB shell call."""
         if len(points) < 2:
             return 0
-        segments = 0
-        for start, end in zip(points, points[1:]):
-            self.run_shell(
-                "input", "swipe",
-                int(start[0]), int(start[1]), int(end[0]), int(end[1]),
-                int(duration_ms),
-                timeout=10,
-            )
-            segments += 1
-            if pause:
-                time.sleep(pause)
-        return segments
+        script = self.build_swipe_script(points, duration_ms=duration_ms, mode=mode)
+        self.run_shell(script, timeout=10 + len(points) * (duration_ms / 1000.0 + 1.5))
+        return len(points) - 1
 
-    def play_move(self, parser, move, duration_ms=120):
+    def play_move(self, parser, move, duration_ms=120, mode="segments"):
         """Convert a suggested board path to screen coordinates and perform it."""
         if not move or not move.get("path"):
             return 0
         path = [(cell["row"], cell["col"]) if isinstance(cell, dict) else tuple(cell)
                 for cell in move.get("path", [])]
         points = [parser.board_center(point) for point in path]
-        return self.swipe_points(points, duration_ms=duration_ms)
+        return self.swipe_points(points, duration_ms=duration_ms, mode=mode)
 
     def ensure_device(self):
         command = self._adb_command("get-state")
@@ -1200,9 +1227,10 @@ class AdbScreenReader:
         if result.returncode != 0 or result.stdout.strip() != "device":
             details = (result.stderr or result.stdout).strip()
             raise RuntimeError(f"ADB device is not ready: {details or 'unknown state'}")
+        self._device_checked = True
 
-    def capture_frame(self):
-        command = self._adb_command("exec-out", "screencap", "-p")
+    def _screencap(self, *args):
+        command = self._adb_command("exec-out", "screencap", *args)
         try:
             result = subprocess.run(command, capture_output=True, timeout=15)
         except FileNotFoundError as exc:
@@ -1212,10 +1240,64 @@ class AdbScreenReader:
             ) from exc
         if result.returncode != 0:
             raise RuntimeError((result.stderr or b"ADB screencap failed").decode("utf-8", errors="ignore"))
-        data = np.frombuffer(result.stdout, dtype=np.uint8)
-        image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+        return result.stdout
+
+    @staticmethod
+    def decode_raw_screencap(data):
+        """Decode ``screencap`` raw output (RGBA with a 12- or 16-byte header) to BGR."""
+        if len(data) < 16:
+            return None
+        width, height, pixel_format = (int(value) for value in np.frombuffer(data[:12], dtype="<u4"))
+        if pixel_format != 1 or not (0 < width <= 8192 and 0 < height <= 8192):
+            return None
+        pixels = width * height * 4
+        header = len(data) - pixels
+        if header not in (12, 16):
+            return None
+        rgba = np.frombuffer(data, dtype=np.uint8, count=pixels, offset=header).reshape(height, width, 4)
+        return cv2.cvtColor(rgba, cv2.COLOR_RGBA2BGR)
+
+    def _capture_png(self):
+        image = cv2.imdecode(np.frombuffer(self._screencap("-p"), dtype=np.uint8), cv2.IMREAD_COLOR)
         if image is None:
             raise RuntimeError("ADB returned a screenshot that OpenCV could not decode")
+        return image
+
+    def _capture_raw(self):
+        image = self.decode_raw_screencap(self._screencap())
+        if image is None:
+            raise RuntimeError("ADB returned a raw screenshot in an unsupported format")
+        return image
+
+    def _choose_capture_mode(self):
+        """Time one raw and one PNG capture and keep whichever this device does faster."""
+        started = time.monotonic()
+        png_frame = self._capture_png()
+        png_seconds = time.monotonic() - started
+        try:
+            started = time.monotonic()
+            raw_frame = self._capture_raw()
+            raw_seconds = time.monotonic() - started
+        except RuntimeError as exc:
+            print(f"ADB: raw screencap unavailable ({exc}); using PNG ({png_seconds:.2f}s per frame).")
+            self.capture_mode = "png"
+            return png_frame
+        self.capture_mode = "raw" if raw_seconds < png_seconds else "png"
+        print(
+            f"ADB: screencap raw {raw_seconds:.2f}s vs png {png_seconds:.2f}s per frame; "
+            f"using {self.capture_mode}."
+        )
+        return raw_frame
+
+    def capture_frame(self):
+        started = time.monotonic()
+        if self.capture_mode == "auto":
+            image = self._choose_capture_mode()
+        elif self.capture_mode == "raw":
+            image = self._capture_raw()
+        else:
+            image = self._capture_png()
+        self.last_capture_seconds = time.monotonic() - started
         return image
 
     @staticmethod
@@ -1226,8 +1308,12 @@ class AdbScreenReader:
         small_second = cv2.resize(second, (160, 320), interpolation=cv2.INTER_AREA)
         return float(np.mean(cv2.absdiff(small_first, small_second)))
 
-    def wait_for_stable_frame(self, stable_frames=3, threshold=1.5, interval=0.35, timeout=20, status_callback=None):
-        self.ensure_device()
+    def wait_for_stable_frame(self, stable_frames=3, threshold=1.5, interval=None, timeout=20, status_callback=None):
+        # A screencap already takes a few hundred milliseconds, so only a short
+        # extra pause is needed between polls.
+        interval = self.poll_interval if interval is None else interval
+        if not self._device_checked:
+            self.ensure_device()
         deadline = time.monotonic() + timeout
         previous = None
         stable_count = 0
@@ -1240,7 +1326,8 @@ class AdbScreenReader:
                 if diff <= threshold:
                     stable_count += 1
                     if stable_count >= stable_frames:
-                        print(f"GREEN LIGHT: screen is stable (diff={diff:.2f}).")
+                        if self.verbose:
+                            print(f"GREEN LIGHT: screen is stable (diff={diff:.2f}).")
                         return frame
                 else:
                     stable_count = 0
@@ -1346,6 +1433,8 @@ class GameBoardParser:
         self.cell_h = 0
         self.center_xs = []
         self.center_ys = []
+        self._ocr_cache = {}
+        self._ocr_pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="ocr")
 
         # Fixed UI regions for 1080x2400 screenshots.  They are scaled for other
         # resolutions before OCR.
@@ -1455,11 +1544,27 @@ class GameBoardParser:
         mask = cv2.resize(mask, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
         whitelist = "0123456789/" if allow_slash else "0123456789"
         config = f"--psm 7 -c tessedit_char_whitelist={whitelist}"
+        return re.sub(r"[^0-9/]", "", self._cached_ocr(mask, config))
+
+    def _cached_ocr(self, mask, config):
+        """Run tesseract on a binarized crop, reusing the answer for identical pixels.
+
+        Every tesseract call starts a separate process, which dominates frame
+        parsing; the level number and untouched target counters are pixel-identical
+        between frames, so their text is served from this cache.
+        """
+        key = (config, mask.shape, zlib.crc32(mask.tobytes()))
+        cached = self._ocr_cache.get(key)
+        if cached is not None:
+            return cached
         try:
             text = pytesseract.image_to_string(mask, config=config)
         except pytesseract.TesseractNotFoundError:
             return ""
-        return re.sub(r"[^0-9/]", "", text)
+        if len(self._ocr_cache) >= 256:
+            self._ocr_cache.clear()
+        self._ocr_cache[key] = text
+        return text
 
     def extract_text(self, image, rect):
         return self._ocr_big_number(image, rect)
@@ -1486,11 +1591,7 @@ class GameBoardParser:
         x1 = min(mask.shape[1], max(b[0] + b[2] for b in boxes) + 5)
         y1 = min(mask.shape[0], max(b[1] + b[3] for b in boxes) + 5)
         crop = cv2.resize(mask[y0:y1, x0:x1], None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
-        try:
-            return re.sub(r"[^0-9]", "", pytesseract.image_to_string(
-                crop, config="--psm 7 -c tessedit_char_whitelist=0123456789"))
-        except pytesseract.TesseractNotFoundError:
-            return ""
+        return re.sub(r"[^0-9]", "", self._cached_ocr(crop, "--psm 7 -c tessedit_char_whitelist=0123456789"))
 
     def _extract_level(self, image):
         """Read the level number; falls back to component geometry for 16-19."""
@@ -1535,8 +1636,10 @@ class GameBoardParser:
 
     def extract_targets(self, image, level):
         targets = {}
-        for name, center_x, total in self.target_layouts.get(str(level), []):
-            value = self._extract_target_count(image, center_x)
+        layout = self.target_layouts.get(str(level), [])
+        # Each counter is a separate tesseract process, so read them concurrently.
+        values = list(self._ocr_pool.map(lambda entry: self._extract_target_count(image, entry[1]), layout))
+        for (name, center_x, total), value in zip(layout, values):
             if "/" in value:
                 left, _ = value.split("/", 1)
             else:
@@ -1593,13 +1696,16 @@ class GameBoardParser:
             print(f"[{source_name}] Ошибка: Не удалось найти игровое поле автоматически.")
             return None
 
-        debug_img = img.copy()
+        # The annotated debug image is only drawn when it will be saved.
+        draw_debug = bool(debug_out_path)
+        debug_img = img.copy() if draw_debug else None
 
-        moves_text = self.extract_text(img, self.moves_rect) or "0"
+        moves_future = self._ocr_pool.submit(self.extract_text, img, self.moves_rect)
         level_text = self._extract_level(img) or "0"
         targets = self.extract_targets(img, level_text)
+        moves_text = moves_future.result() or "0"
 
-        for rect in [self.moves_rect, self.level_rect]:
+        for rect in [self.moves_rect, self.level_rect] if draw_debug else []:
             x, y, w, h = self._scale_rect(rect, img)
             cv2.rectangle(debug_img, (x, y), (x + w, y + h), (255, 0, 0), 3)
 
@@ -1615,19 +1721,21 @@ class GameBoardParser:
                 x1 = min(img.shape[1], cx + crop_radius)
                 y1 = min(img.shape[0], cy + crop_radius)
 
+                cell_img = img[y0:y1, x0:x1]
+                item_type = self.classify_cell(cell_img) if cell_img.size else "ERROR"
+                row_data.append(item_type)
+                if not draw_debug:
+                    continue
+
                 cv2.rectangle(debug_img,
                               (int(round(center_x - self.cell_w / 2)), int(round(center_y - self.cell_h / 2))),
                               (int(round(center_x + self.cell_w / 2)), int(round(center_y + self.cell_h / 2))),
                               (0, 255, 0), 2)
                 cv2.circle(debug_img, (cx, cy), 5, (0, 0, 255), -1)
-
-                cell_img = img[y0:y1, x0:x1]
-                item_type = self.classify_cell(cell_img) if cell_img.size else "ERROR"
                 cv2.putText(debug_img, item_type, (cx - crop_radius, cy - crop_radius + 24),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
                 cv2.putText(debug_img, item_type, (cx - crop_radius, cy - crop_radius + 24),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 1)
-                row_data.append(item_type)
             board.append(row_data)
 
         if debug_out_path:
@@ -2034,6 +2142,16 @@ def parse_args():
                      help="Experimental: after ADB analysis, draw the best move on the phone with input swipe segments.")
     cli.add_argument("--swipe-duration-ms", type=int, default=120,
                      help="Duration of each experimental ADB swipe segment for --play-move.")
+    cli.add_argument("--swipe-mode", choices=("segments", "gesture"), default="segments",
+                     help="How --play-move draws a chain: 'segments' sends one swipe per pair of cells; "
+                          "'gesture' keeps the finger down for the whole chain (input motionevent, Android 11+).")
+    cli.add_argument("--capture-mode", choices=AdbScreenReader.CAPTURE_MODES, default="auto",
+                     help="ADB screenshot format: 'raw' skips PNG encoding on the phone, 'png' is the old behaviour, "
+                          "'auto' times both once and keeps the faster one.")
+    cli.add_argument("--poll-interval", type=float, default=0.05,
+                     help="Extra pause in seconds between ADB screenshots while waiting for a stable screen.")
+    cli.add_argument("--live-debug-image", action="store_true",
+                     help="Also save the annotated *_DEBUG.jpg on every analysis in --gui/--watch mode.")
     cli.add_argument("--simulate", action="store_true",
                      help="Run deterministic random full-game simulations instead of parsing screenshots.")
     cli.add_argument("--simulate-games", type=int, default=50, help="Number of simulated games to run.")
@@ -2133,8 +2251,8 @@ def reuse_stable_display_if_unchanged(
         "reused": False,
     }
 
-def analyze_captured_frame(parser, frame, out_path, debug_label, args):
-    debug_path = out_path.rsplit(".", 1)[0] + "_DEBUG.jpg"
+def analyze_captured_frame(parser, frame, out_path, debug_label, args, save_debug=True):
+    debug_path = out_path.rsplit(".", 1)[0] + "_DEBUG.jpg" if save_debug else None
     result_json = parser.process_frame(frame, debug_out_path=debug_path, source_name=debug_label)
     if not result_json:
         print(f"{debug_label}: стабильный кадр получен, но поле не найдено; продолжаю ожидание.")
@@ -2145,7 +2263,8 @@ def analyze_captured_frame(parser, frame, out_path, debug_label, args):
     overlay_img = None
     if result_json.get("bestMove"):
         overlay_img = parser.draw_move_overlay(frame, result_json["bestMove"], overlay_path)
-    print(f"Готово! Сохранено в {out_path}; debug={debug_path}; overlay={overlay_path}")
+    debug_text = f"; debug={debug_path}" if debug_path else ""
+    print(f"Готово! Сохранено в {out_path}{debug_text}; overlay={overlay_path}")
     if args.show_overlay_window and overlay_img is not None:
         show_overlay_window(overlay_img, wait_ms=args.window_ms)
     if result_json.get("bestMove"):
@@ -2161,6 +2280,10 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
     last_result = None
     last_display_frame = None
     last_board_signature = None
+    last_analyzed_frame = None
+    save_debug = bool(getattr(args, "live_debug_image", False))
+    if isinstance(reader, AdbScreenReader):
+        reader.verbose = False  # the loop polls constantly; do not print on every stable frame
 
     def on_waiting_frame(frame, diff, stable_count):
         display_frame = last_display_frame if last_display_frame is not None else frame
@@ -2185,7 +2308,26 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
                 print(f"{debug_label}: {exc}; продолжаю ожидание.")
                 continue
 
-            result = analyze_captured_frame(parser, frame, out_path, debug_label, args)
+            if (
+                last_analyzed_frame is not None
+                and AdbScreenReader.frame_difference(last_analyzed_frame, frame) <= args.stable_threshold
+            ):
+                # Same screen as the one already analysed: skip OCR, the solver
+                # and all file writes, and just keep the current hint visible.
+                if args.gui and not gui.render(
+                    last_display_frame if last_display_frame is not None else frame,
+                    "Экран не изменился; оставляю прошлую подсказку на месте",
+                    result=last_result,
+                    stable_count=args.stable_frames,
+                ):
+                    break
+                time.sleep(LIVE_UNCHANGED_SLEEP)
+                continue
+
+            cycle_started = time.monotonic()
+            result = analyze_captured_frame(parser, frame, out_path, debug_label, args, save_debug=save_debug)
+            last_analyzed_frame = frame
+            print(f"{debug_label}: анализ кадра занял {time.monotonic() - cycle_started:.2f} c.")
             display_state = reuse_stable_display_if_unchanged(
                 frame,
                 result,
@@ -2205,8 +2347,15 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
                         display_frame = parser.draw_move_overlay(frame, result["bestMove"], args.overlay)
                         status = "Стабильный экран: лучший ход рассчитан"
                         if args.play_move and isinstance(reader, AdbScreenReader):
-                            segments = reader.play_move(parser, result["bestMove"], duration_ms=args.swipe_duration_ms)
-                            print(f"ADB: experimental move sent as {segments} swipe segment(s).")
+                            swipe_started = time.monotonic()
+                            segments = reader.play_move(
+                                parser, result["bestMove"],
+                                duration_ms=args.swipe_duration_ms, mode=args.swipe_mode,
+                            )
+                            print(
+                                f"ADB: experimental move sent as {segments} swipe segment(s) "
+                                f"in {time.monotonic() - swipe_started:.2f} c."
+                            )
                     else:
                         status = "Стабильный экран: ходов не найдено"
                     last_result = result
@@ -2217,7 +2366,7 @@ def run_live_assistant(parser, reader, args, debug_label, default_out):
                 break
             if not args.watch and not args.gui:
                 break
-            time.sleep(0.5)
+            time.sleep(LIVE_IDLE_SLEEP)
     except KeyboardInterrupt:
         print("Остановлено пользователем.")
     finally:
@@ -2245,7 +2394,12 @@ def run_simulation(args):
 
 def analyze_adb_screen(parser, args):
     print("ADB: подключаюсь к устройству и жду стабильности экрана...")
-    reader = AdbScreenReader(adb_path=args.adb_path, serial=args.serial)
+    reader = AdbScreenReader(
+        adb_path=args.adb_path,
+        serial=args.serial,
+        capture_mode=args.capture_mode,
+        poll_interval=args.poll_interval,
+    )
     if args.watch or args.gui:
         return run_live_assistant(parser, reader, args, "adb", os.path.join("test_images", "adb_capture.json"))
     frame = reader.wait_for_stable_frame(
@@ -2256,7 +2410,9 @@ def analyze_adb_screen(parser, args):
     out_path = args.out or os.path.join("test_images", "adb_capture.json")
     result = analyze_captured_frame(parser, frame, out_path, "adb", args)
     if args.play_move and result and result.get("bestMove"):
-        segments = reader.play_move(parser, result["bestMove"], duration_ms=args.swipe_duration_ms)
+        segments = reader.play_move(
+            parser, result["bestMove"], duration_ms=args.swipe_duration_ms, mode=args.swipe_mode
+        )
         print(f"ADB: experimental move sent as {segments} swipe segment(s).")
     return result
 

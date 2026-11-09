@@ -420,8 +420,8 @@ def test_adb_play_move_converts_board_path_to_swipe_segments():
     segments = FakeReader().play_move(parser, move, duration_ms=77)
 
     assert segments == 2
-    assert calls[0] == ("input", "swipe", 10, 100, 20, 200, 77)
-    assert calls[1] == ("input", "swipe", 20, 200, 30, 300, 77)
+    # Both segments travel in a single ADB shell call.
+    assert calls == [("input swipe 10 100 20 200 77 && input swipe 20 200 30 300 77",)]
 
 
 def test_neural_policy_feature_encoder_has_stable_shape():
@@ -572,3 +572,61 @@ def test_refresh_bonus_only_applies_when_target_is_starved_on_board():
 
     assert starved == 39.0
     assert supplied == 3.0
+
+
+def test_raw_screencap_decodes_both_header_sizes_to_bgr():
+    import struct
+    import numpy as np
+    from game_parser import AdbScreenReader
+
+    rgba = np.zeros((3, 2, 4), dtype=np.uint8)
+    rgba[..., 0] = 10   # R
+    rgba[..., 1] = 20   # G
+    rgba[..., 2] = 30   # B
+    rgba[..., 3] = 255
+    for header in (struct.pack("<3I", 2, 3, 1), struct.pack("<4I", 2, 3, 1, 0)):
+        frame = AdbScreenReader.decode_raw_screencap(header + rgba.tobytes())
+        assert frame.shape == (3, 2, 3)
+        assert tuple(frame[0, 0]) == (30, 20, 10)
+
+    assert AdbScreenReader.decode_raw_screencap(b"\x89PNG" + b"0" * 64) is None
+
+
+def test_swipe_script_sends_whole_chain_in_one_shell_call():
+    from game_parser import AdbScreenReader
+
+    points = [(10, 20), (30, 40), (50, 60)]
+    segments = AdbScreenReader.build_swipe_script(points, duration_ms=90, mode="segments")
+    gesture = AdbScreenReader.build_swipe_script(points, mode="gesture")
+
+    assert segments == "input swipe 10 20 30 40 90 && input swipe 30 40 50 60 90"
+    assert gesture == (
+        "input motionevent DOWN 10 20 && input motionevent MOVE 30 40 && "
+        "input motionevent MOVE 50 60 && input motionevent UP 50 60"
+    )
+
+    calls = []
+    reader = AdbScreenReader(adb_path="adb")
+    reader.run_shell = lambda *args, **kwargs: calls.append(args)
+    assert reader.swipe_points(points) == 2
+    assert len(calls) == 1
+
+
+def test_ocr_is_cached_for_identical_pixels(monkeypatch):
+    import numpy as np
+    import game_parser
+
+    calls = []
+    monkeypatch.setattr(
+        game_parser.pytesseract, "image_to_string",
+        lambda image, config="": calls.append(config) or "12",
+    )
+    parser = game_parser.GameBoardParser()
+    mask = np.zeros((8, 8), dtype=np.uint8)
+    other = np.full((8, 8), 255, dtype=np.uint8)
+
+    assert parser._cached_ocr(mask, "cfg") == "12"
+    assert parser._cached_ocr(mask.copy(), "cfg") == "12"
+    assert len(calls) == 1
+    parser._cached_ocr(other, "cfg")
+    assert len(calls) == 2
